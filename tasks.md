@@ -1,0 +1,24 @@
+- [x] **Project Setup:** Initialize Flutter project for Windows.
+- [x] **Core UI - Cashier View:** Design and implement the main screen for balance closing.
+  - [x] Input for Opening Balance
+  - [x] Input for Cash Sales (Over the Counter Cash)
+  - [x] Input for TPA (POS) Sales
+  - [x] Input for Total Sales from the sales system.
+  - [x] Dynamic list for adding multiple Expense entries (description and amount).
+  - [x] Input for Cash on Hand at closing.
+  - [x] Display area for calculation results (Expected vs. Actual, Excess/Shortage).
+  - [x] "Close Balance" button.
+- [x] **Calculation Logic:** Implement the closing balance formula.
+- [x] **Data Persistence:**
+  - [x] Set up a local database (e.g., SQLite using `sqflite`).
+  - [x] Save each closing record to the database.
+- [x] **Receipt Printing:**
+  - [x] Generate a receipt-sized document (PDF) of the closing summary.
+  - [x] Implement printing functionality for Windows.
+- [x] **Authentication:**
+  - [x] Create a login screen.
+  - [x] Implement role-based access (Cashier, Admin).
+- [x] **Admin Panel:**
+  - [x] View a list of all closing records.
+  - [x] Filter and search records.
+  - [x] View details of a specific closing record.
