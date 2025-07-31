@@ -1,36 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:salaries_app/admin_panel.dart';
+import 'database_helper.dart';
 import 'main.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final dbHelper = DatabaseHelper.instance;
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
       final username = _usernameController.text;
       final password = _passwordController.text;
 
-      if (username == 'admin' && password == 'admin') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const ClosingScreen(username: 'admin')),
-        );
-      } else if (username == 'cashier' && password == 'cashier') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const ClosingScreen(username: 'cashier')),
-        );
+      final user = await dbHelper.getUser(username);
+
+      if (user != null && user[DatabaseHelper.columnPassword] == password) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => ClosingScreen(username: username)),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid credentials')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid credentials')),
+          );
+        }
       }
     }
   }
