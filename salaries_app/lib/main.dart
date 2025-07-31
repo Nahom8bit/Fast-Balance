@@ -8,6 +8,8 @@ import 'login_screen.dart';
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:salaries_app/settings_screen.dart';
+import 'update_service.dart';
+import 'update_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +20,24 @@ void main() async {
     }
   } catch (e) {
     // Handle web platform where Platform.isWindows is not available
-    print('Running on web platform');
+    // Silent handling for production
   }
   await CurrencyFormatter.init();
   runApp(const BalanceClosingApp());
+  
+  // Check for updates in the background
+  _checkForUpdates();
+}
+
+Future<void> _checkForUpdates() async {
+  if (await UpdateService.shouldCheckForUpdates()) {
+    final updateInfo = await UpdateService.checkForUpdates();
+    if (updateInfo != null) {
+      await UpdateService.setLastUpdateCheck();
+      // Note: We can't show dialog here as we don't have context
+      // The dialog will be shown when the app starts
+    }
+  }
 }
 
 class BalanceClosingApp extends StatelessWidget {
@@ -30,7 +46,7 @@ class BalanceClosingApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Balance Closing',
+      title: 'Mini Mercado - Balance Closing',
       theme: ThemeData(
         primarySwatch: Colors.teal,
         visualDensity: VisualDensity.adaptivePlatformDensity,

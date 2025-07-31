@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'currency_formatter.dart';
+import 'update_service.dart';
+import 'update_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -61,8 +63,63 @@ class SettingsScreenState extends State<SettingsScreen> {
               }).toList(),
             ),
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.system_update),
+            title: const Text('Check for Updates'),
+            subtitle: const Text('Check for the latest version'),
+            onTap: _checkForUpdates,
+          ),
         ],
       ),
+    );
+  }
+
+  Future<void> _checkForUpdates() async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Checking for updates...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final updateInfo = await UpdateService.checkForUpdates();
+      Navigator.of(context).pop(); // Close loading dialog
+      
+      if (updateInfo != null) {
+        await UpdateService.setLastUpdateCheck();
+        _showUpdateDialog(updateInfo);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You are using the latest version!')),
+          );
+        }
+      }
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to check for updates')),
+        );
+      }
+    }
+  }
+
+  void _showUpdateDialog(UpdateInfo updateInfo) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => UpdateDialog(updateInfo: updateInfo),
     );
   }
 }

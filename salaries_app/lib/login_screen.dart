@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
-import 'main.dart'; 
+import 'main.dart';
+import 'update_service.dart';
+import 'update_dialog.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +16,30 @@ class LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final dbHelper = DatabaseHelper.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdates();
+  }
+
+  Future<void> _checkForUpdates() async {
+    if (await UpdateService.shouldCheckForUpdates()) {
+      final updateInfo = await UpdateService.checkForUpdates();
+      if (updateInfo != null && mounted) {
+        await UpdateService.setLastUpdateCheck();
+        _showUpdateDialog(updateInfo);
+      }
+    }
+  }
+
+  void _showUpdateDialog(UpdateInfo updateInfo) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => UpdateDialog(updateInfo: updateInfo),
+    );
+  }
 
   void _login() async {
     if (_formKey.currentState!.validate()) {

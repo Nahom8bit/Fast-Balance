@@ -328,15 +328,25 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
     Widget _buildSalesTrendChart(List<Map<String, dynamic>> records) {
-    records.sort((a, b) => DateTime.parse(a[DatabaseHelper.columnDate]).compareTo(DateTime.parse(b[DatabaseHelper.columnDate])));
+    final sortedRecords = List<Map<String, dynamic>>.from(records);
+    sortedRecords.sort((a, b) => DateTime.parse(a[DatabaseHelper.columnDate]).compareTo(DateTime.parse(b[DatabaseHelper.columnDate])));
     
-    final cashSpots = records.asMap().entries.map((entry) {
+    final cashSpots = sortedRecords.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value[DatabaseHelper.columnCash]);
     }).toList();
 
-    final tpaSpots = records.asMap().entries.map((entry) {
+    final tpaSpots = sortedRecords.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value[DatabaseHelper.columnTpa]);
     }).toList();
+
+    // Calculate dynamic Y-axis values based on actual data
+    double maxCash = cashSpots.isNotEmpty ? cashSpots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) : 0;
+    double maxTpa = tpaSpots.isNotEmpty ? tpaSpots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) : 0;
+    double maxValue = (maxCash > maxTpa ? maxCash : maxTpa);
+    
+    // Calculate appropriate interval based on max value
+    double interval = _calculateInterval(maxValue);
+    double maxY = (maxValue / interval).ceil() * interval;
 
     return Card(
       elevation: 2,
@@ -379,11 +389,13 @@ class DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              height: 300,
-              child: records.isNotEmpty ? LineChart(
-                LineChartData(
-                  gridData: FlGridData(
+                                      SizedBox(
+               height: 300,
+               child: records.isNotEmpty ? LineChart(
+                 LineChartData(
+                   minY: 0,
+                   maxY: maxY,
+                   gridData: FlGridData(
                     show: true,
                     getDrawingHorizontalLine: (value) => FlLine(
                       color: const Color(0xFFE2E8F0),
@@ -399,9 +411,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() < records.length) {
-                            final date = DateTime.parse(records[value.toInt()][DatabaseHelper.columnDate]);
+                                                 getTitlesWidget: (value, meta) {
+                           if (value.toInt() < sortedRecords.length) {
+                             final date = DateTime.parse(sortedRecords[value.toInt()][DatabaseHelper.columnDate]);
                             return Text(
                               DateFormat('MMM d').format(date),
                               style: const TextStyle(
@@ -415,22 +427,22 @@ class DashboardScreenState extends State<DashboardScreen> {
                         interval: 1,
                       ),
                     ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            '\$${value.toInt()}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF64748B),
-                            ),
-                          );
-                        },
-                        interval: 500,
-                      ),
-                    ),
+                                         leftTitles: AxisTitles(
+                       sideTitles: SideTitles(
+                         showTitles: true,
+                         reservedSize: 50,
+                         getTitlesWidget: (value, meta) {
+                           return Text(
+                             'Kz${value.toInt()}',
+                             style: const TextStyle(
+                               fontSize: 12,
+                               color: Color(0xFF64748B),
+                             ),
+                           );
+                         },
+                         interval: interval,
+                       ),
+                     ),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -689,7 +701,26 @@ class DashboardScreenState extends State<DashboardScreen> {
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
-      ),
-    );
+             ),
+     );
+   }
+
+  double _calculateInterval(double maxValue) {
+    if (maxValue <= 0) return 1000;
+    
+    // Calculate appropriate interval based on the magnitude of the max value
+    if (maxValue < 1000) {
+      return 100;
+    } else if (maxValue < 5000) {
+      return 500;
+    } else if (maxValue < 10000) {
+      return 1000;
+    } else if (maxValue < 50000) {
+      return 5000;
+    } else if (maxValue < 100000) {
+      return 10000;
+    } else {
+      return 25000;
+    }
   }
 } 
