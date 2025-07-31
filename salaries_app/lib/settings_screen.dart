@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'currency_formatter.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -9,7 +10,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
-  String _selectedCurrency = 'LKR'; 
+  String _selectedCurrency = 'Kz'; 
 
   @override
   void initState() {
@@ -20,13 +21,14 @@ class SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadCurrency() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedCurrency = prefs.getString('currency') ?? 'LKR';
+      _selectedCurrency = prefs.getString('currency') ?? 'Kz';
     });
   }
 
   Future<void> _setCurrency(String currency) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('currency', currency);
+    CurrencyFormatter.setCurrency(currency);
     setState(() {
       _selectedCurrency = currency;
     });
@@ -42,6 +44,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         children: [
           ListTile(
             title: const Text('Currency'),
+            subtitle: const Text('Select your preferred currency'),
             trailing: DropdownButton<String>(
               value: _selectedCurrency,
               onChanged: (String? newValue) {
@@ -49,7 +52,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                   _setCurrency(newValue);
                 }
               },
-              items: <String>['LKR', 'USD', 'EUR']
+              items: CurrencyFormatter.getAvailableCurrencies()
                   .map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
