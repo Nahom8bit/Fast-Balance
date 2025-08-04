@@ -1,0 +1,275 @@
+# ========================================
+# SALARIES PROJECT - ROOT LEVEL GITIGNORE
+# ========================================
+
+# ========================================
+# SENSITIVE INFORMATION
+# ========================================
+
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+api_keys.txt
+secrets.json
+config.json
+credentials.json
+firebase_key.json
+google-services.json
+GoogleService-Info.plist
+
+# Database files with sensitive data
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+database/
+data/
+backup/
+
+# User data and personal information
+users/
+profiles/
+personal/
+private/
+
+# ========================================
+# ENVIRONMENT AND CONFIGURATION
+# ========================================
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.test
+
+# Configuration files with sensitive data
+config/
+settings/
+.properties
+application.properties
+application.yml
+application.yaml
+
+# ========================================
+# BUILD AND DEPLOYMENT
+# ========================================
+
+# Build outputs
+build/
+dist/
+out/
+target/
+bin/
+obj/
+
+# Installer files
+*.exe
+*.msi
+*.dmg
+*.pkg
+*.deb
+*.rpm
+installer/
+setup/
+
+# Compiled files
+*.class
+*.pyc
+*.pyo
+__pycache__/
+*.so
+*.dll
+*.dylib
+
+# ========================================
+# DEVELOPMENT TOOLS
+# ========================================
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Version control
+.svn/
+.hg/
+.git/
+
+# ========================================
+# OPERATING SYSTEM
+# ========================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================================
+# LOGS AND TEMPORARY FILES
+# ========================================
+
+# Log files
+*.log
+logs/
+log/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+
+# Cache directories
+.cache/
+cache/
+tmp/
+temp/
+
+# ========================================
+# FLUTTER SPECIFIC (already covered in subdirectory)
+# ========================================
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# ========================================
+# TESTING AND COVERAGE
+# ========================================
+
+# Test coverage
+coverage/
+*.lcov
+.coverage
+htmlcov/
+
+# Test outputs
+test-results/
+junit.xml
+test-report.xml
+
+# ========================================
+# DOCUMENTATION AND REPORTS
+# ========================================
+
+# Generated documentation
+docs/build/
+docs/_build/
+site/
+
+# Reports
+reports/
+*.report
+
+# ========================================
+# CUSTOM PROJECT SPECIFIC
+# ========================================
+
+# Salary and financial data (sensitive)
+salary_data/
+financial_records/
+payroll/
+transactions/
+receipts/
+
+# User authentication data
+auth/
+sessions/
+tokens/
+
+# Backup files
+backups/
+*.backup
+*.bak
+
+# ========================================
+# SECURITY FILES
+# ========================================
+
+# SSL certificates
+*.crt
+*.cer
+*.der
+*.p7b
+*.p7c
+
+# SSH keys
+id_rsa
+id_rsa.pub
+*.ppk
+
+# ========================================
+# DEPENDENCIES (if not using package managers)
+# ========================================
+
+# Node modules (if any web components)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ========================================
+# MONITORING AND ANALYTICS
+# ========================================
+
+# Analytics data
+analytics/
+metrics/
+stats/
+
+# Performance monitoring
+performance/
+profiling/ 
