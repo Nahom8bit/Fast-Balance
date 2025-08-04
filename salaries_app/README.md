@@ -1,4 +1,4 @@
-# 💰 Mini Mercado - Daily Balance Closing System
+# ⚖️ Balancer - Daily Balance Closing System
 
 A professional Flutter application for managing daily financial closings with advanced features and Kwanza currency support.
 
@@ -32,7 +32,7 @@ A professional Flutter application for managing daily financial closings with ad
 ## 📱 Screenshots
 
 ### Main Dashboard
-![Dashboard](https://via.placeholder.com/800x400/1E3A8A/FFFFFF?text=Mini+Mercado+Dashboard)
+![Dashboard](https://via.placeholder.com/800x400/1E3A8A/FFFFFF?text=Balancer+Dashboard)
 
 ### Closing Form
 ![Closing Form](https://via.placeholder.com/800x400/10B981/FFFFFF?text=Daily+Closing+Form)

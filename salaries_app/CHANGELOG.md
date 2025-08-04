@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-01-XX
 
 ### Added
-- Initial release of Mini Mercado app
+- Initial release of Balancer app
 - Daily balance closing functionality
 - SQLite database integration
 - User authentication system

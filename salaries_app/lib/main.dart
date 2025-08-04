@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:salaries_app/admin_panel.dart';
-import 'package:salaries_app/currency_formatter.dart';
+import 'package:balancer/admin_panel.dart';
+import 'package:balancer/currency_formatter.dart';
 import 'database_helper.dart';
 import 'receipt_printer.dart';
 import 'login_screen.dart';
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:salaries_app/settings_screen.dart';
+import 'package:balancer/settings_screen.dart';
 import 'update_service.dart';
-import 'update_dialog.dart';
+import 'theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ void main() async {
     // Silent handling for production
   }
   await CurrencyFormatter.init();
-  runApp(const BalanceClosingApp());
+  runApp(const BalancerApp());
   
   // Check for updates in the background
   _checkForUpdates();
@@ -40,46 +40,58 @@ Future<void> _checkForUpdates() async {
   }
 }
 
-class BalanceClosingApp extends StatelessWidget {
-  const BalanceClosingApp({super.key});
+// Global theme notifier
+class ThemeNotifier extends ChangeNotifier {
+  static final ThemeNotifier _instance = ThemeNotifier._internal();
+  factory ThemeNotifier() => _instance;
+  ThemeNotifier._internal();
+
+  ThemeMode _themeMode = ThemeMode.system;
+
+  ThemeMode get themeMode => _themeMode;
+
+  Future<void> loadTheme() async {
+    _themeMode = await ThemeService.getThemeMode();
+    notifyListeners();
+  }
+
+  Future<void> setTheme(ThemeMode mode) async {
+    _themeMode = mode;
+    await ThemeService.setThemeMode(mode);
+    notifyListeners();
+  }
+}
+
+class BalancerApp extends StatefulWidget {
+  const BalancerApp({super.key});
+
+  @override
+  State<BalancerApp> createState() => _BalancerAppState();
+}
+
+class _BalancerAppState extends State<BalancerApp> {
+  final _themeNotifier = ThemeNotifier();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeNotifier.loadTheme();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mini Mercado - Balance Closing',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        scaffoldBackgroundColor: Colors.grey[100],
-        cardTheme: CardTheme(
-          elevation: 1.0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
-        ),
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0, color: Colors.black87),
-          bodyLarge: TextStyle(fontSize: 16.0),
-        ),
-      ),
-      debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+    return ListenableBuilder(
+      listenable: _themeNotifier,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Mini Mercado - Balance Closing',
+          theme: ThemeService.getLightTheme(),
+          darkTheme: ThemeService.getDarkTheme(),
+          themeMode: _themeNotifier.themeMode,
+          debugShowCheckedModeBanner: false,
+          home: const LoginScreen(),
+        );
+      },
     );
   }
 }
@@ -159,6 +171,19 @@ class ClosingScreenState extends State<ClosingScreen> {
       final totalCounted = cash + tpa + totalExpenses;
       _netResult = totalCounted - openingBalance;
       _discrepancy = _netResult - sales;
+    });
+  }
+
+  void _clearAllFields() {
+    setState(() {
+      _cashController.clear();
+      _tpaController.clear();
+      _openingBalanceController.clear();
+      _salesController.clear();
+      _expensesController.clear();
+      _expenses.clear();
+      _netResult = 0;
+      _discrepancy = 0;
     });
   }
 
@@ -460,15 +485,91 @@ class ClosingScreenState extends State<ClosingScreen> {
         'discrepancy': _discrepancy,
       };
 
-      await dbHelper.insertRecord(closingData);
+      // Convert expenses to the format expected by the database
+      List<Map<String, dynamic>> expensesData = _expenses.map((expense) => {
+        DatabaseHelper.columnExpenseDescription: expense.description,
+        DatabaseHelper.columnExpenseAmount: expense.amount,
+      }).toList();
+
+      await dbHelper.insertRecordWithExpenses(closingData, expensesData);
       
       setState(() => _lastClosingData = closingData);
 
+      // Show print popup after successful save
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Closing record saved successfully!')),
-        );
+        _showPrintDialog(closingData);
       }
+    }
+  }
+
+  void _showPrintDialog(Map<String, dynamic> closingData) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User must make a choice
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          title: const Row(
+            children: [
+              Icon(Icons.print, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Print Receipt'),
+            ],
+          ),
+          content: const Text(
+            'Record saved successfully! Would you like to print the closing receipt?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Skip Print'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _clearAllFields();
+                _showSuccessMessage();
+              },
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.print),
+              label: const Text('Print Receipt'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  await ReceiptPrinter.printReceipt(closingData);
+                  // Clear fields after printing
+                  _clearAllFields();
+                  _showSuccessMessage();
+                } catch (e) {
+                  // If printing fails, still clear fields and show success
+                  _clearAllFields();
+                  _showSuccessMessage();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Print failed: $e'),
+                        backgroundColor: Colors.orange,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessMessage() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Closing record saved successfully! All fields cleared for next cashier.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
   }
 }

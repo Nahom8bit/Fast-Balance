@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'currency_formatter.dart';
 import 'update_service.dart';
 import 'update_dialog.dart';
+import 'theme_service.dart';
+import 'main.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,17 +15,32 @@ class SettingsScreen extends StatefulWidget {
 
 class SettingsScreenState extends State<SettingsScreen> {
   String _selectedCurrency = 'Kz'; 
+  ThemeMode _selectedTheme = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrency();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    await Future.wait([
+      _loadCurrency(),
+      _loadTheme(),
+    ]);
   }
 
   Future<void> _loadCurrency() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _selectedCurrency = prefs.getString('currency') ?? 'Kz';
+    });
+  }
+
+  Future<void> _loadTheme() async {
+    final themeMode = await ThemeService.getThemeMode();
+    setState(() {
+      _selectedTheme = themeMode;
     });
   }
 
@@ -36,6 +53,26 @@ class SettingsScreenState extends State<SettingsScreen> {
     });
   }
 
+  Future<void> _setTheme(ThemeMode themeMode) async {
+    setState(() {
+      _selectedTheme = themeMode;
+    });
+    
+    // Use the global theme notifier to update the theme
+    final themeNotifier = ThemeNotifier();
+    await themeNotifier.setTheme(themeMode);
+    
+    // Show feedback to user
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Theme changed to ${ThemeService.getThemeModeString(themeMode)}'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +81,30 @@ class SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
+          ListTile(
+            leading: const Icon(Icons.palette),
+            title: const Text('Theme'),
+            subtitle: const Text('Choose your preferred theme'),
+            trailing: DropdownButton<ThemeMode>(
+              value: _selectedTheme,
+              onChanged: (ThemeMode? newValue) {
+                if (newValue != null) {
+                  _setTheme(newValue);
+                }
+              },
+              items: [
+                ThemeMode.light,
+                ThemeMode.dark,
+                ThemeMode.system,
+              ].map<DropdownMenuItem<ThemeMode>>((ThemeMode value) {
+                return DropdownMenuItem<ThemeMode>(
+                  value: value,
+                  child: Text(ThemeService.getThemeModeString(value)),
+                );
+              }).toList(),
+            ),
+          ),
+          const Divider(),
           ListTile(
             title: const Text('Currency'),
             subtitle: const Text('Select your preferred currency'),
@@ -93,11 +154,15 @@ class SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final updateInfo = await UpdateService.checkForUpdates();
-      Navigator.of(context).pop(); // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+      }
       
       if (updateInfo != null) {
         await UpdateService.setLastUpdateCheck();
-        _showUpdateDialog(updateInfo);
+        if (mounted) {
+          _showUpdateDialog(updateInfo);
+        }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -106,8 +171,8 @@ class SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
       if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to check for updates')),
         );

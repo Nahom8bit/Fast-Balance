@@ -5,10 +5,11 @@ import 'dart:io';
 
 class DatabaseHelper {
   static const _databaseName = "BalanceClosing.db";
-  static const _databaseVersion = 4; // Incremented version for cashier field
+  static const _databaseVersion = 5; // Incremented version for expenses table
 
   static const tableRecords = 'closing_records';
   static const tableUsers = 'users';
+  static const tableExpenses = 'expenses';
 
   // Records table columns
   static const columnId = '_id';
@@ -27,6 +28,12 @@ class DatabaseHelper {
   static const columnUsername = 'username';
   static const columnPassword = 'password';
   static const columnRole = 'role';
+
+  // Expenses table columns
+  static const columnExpenseId = 'id';
+  static const columnExpenseRecordId = 'record_id';
+  static const columnExpenseDescription = 'description';
+  static const columnExpenseAmount = 'amount';
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -50,6 +57,7 @@ class DatabaseHelper {
   Future _onCreate(Database db, int version) async {
     await _createRecordsTable(db);
     await _createUsersTable(db);
+    await _createExpensesTable(db);
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -59,6 +67,10 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       // Add cashier column to existing records table
       await db.execute('ALTER TABLE $tableRecords ADD COLUMN $columnCashier TEXT NOT NULL DEFAULT "Unknown"');
+    }
+    if (oldVersion < 5) {
+      // Create expenses table
+      await _createExpensesTable(db);
     }
   }
 
@@ -96,9 +108,36 @@ class DatabaseHelper {
     });
   }
 
+  Future<void> _createExpensesTable(Database db) async {
+    await db.execute('''
+          CREATE TABLE $tableExpenses (
+            $columnExpenseId INTEGER PRIMARY KEY AUTOINCREMENT,
+            $columnExpenseRecordId INTEGER NOT NULL,
+            $columnExpenseDescription TEXT NOT NULL,
+            $columnExpenseAmount REAL NOT NULL,
+            FOREIGN KEY ($columnExpenseRecordId) REFERENCES $tableRecords ($columnId) ON DELETE CASCADE
+          )
+          ''');
+  }
+
   Future<int> insertRecord(Map<String, dynamic> row) async {
     Database db = await instance.database;
     return await db.insert(tableRecords, row);
+  }
+
+  Future<int> insertRecordWithExpenses(Map<String, dynamic> record, List<Map<String, dynamic>> expenses) async {
+    Database db = await instance.database;
+    await db.transaction((txn) async {
+      // Insert the main record
+      int recordId = await txn.insert(tableRecords, record);
+      
+      // Insert all expenses for this record
+      for (var expense in expenses) {
+        expense[columnExpenseRecordId] = recordId;
+        await txn.insert(tableExpenses, expense);
+      }
+    });
+    return 1; // Return success
   }
 
   Future<List<Map<String, dynamic>>> queryAllRecords() async {
@@ -170,6 +209,16 @@ class DatabaseHelper {
       where: '$columnRole = ?',
       whereArgs: ['cashier'],
       columns: [columnUserId, columnUsername],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getExpensesForRecord(int recordId) async {
+    Database db = await instance.database;
+    return await db.query(
+      tableExpenses,
+      where: '$columnExpenseRecordId = ?',
+      whereArgs: [recordId],
+      orderBy: '$columnExpenseId ASC',
     );
   }
 }

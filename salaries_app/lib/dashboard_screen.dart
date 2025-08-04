@@ -37,7 +37,6 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
         children: [
           _buildHeader(),
@@ -65,13 +64,13 @@ class DashboardScreenState extends State<DashboardScreen> {
   Widget _buildHeader() {
     return Container(
       height: 80,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E3A8A),
+      decoration: BoxDecoration(
+        color: Theme.of(context).appBarTheme.backgroundColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
             blurRadius: 4,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -80,18 +79,18 @@ class DashboardScreenState extends State<DashboardScreen> {
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+              icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor, size: 24),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.store, color: Colors.white, size: 24),
+            Icon(Icons.store, color: Theme.of(context).appBarTheme.foregroundColor, size: 24),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               'Mini Mercado - KPI Dashboard',
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).appBarTheme.foregroundColor,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -134,19 +133,19 @@ class DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white24),
+          border: Border.all(color: Theme.of(context).dividerTheme.color ?? Colors.grey),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.calendar_today, color: Color(0xFF1E3A8A), size: 16),
+            Icon(Icons.calendar_today, color: Theme.of(context).primaryColor, size: 16),
             const SizedBox(width: 8),
             Text(
               DateFormat('dd-MM-yyyy').format(date),
-              style: const TextStyle(
-                color: Color(0xFF1E3A8A),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -160,15 +159,15 @@ class DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: Theme.of(context).dividerTheme.color ?? Colors.grey),
       ),
       child: DropdownButton<String>(
         value: _selectedPeriod,
         underline: Container(),
-        style: const TextStyle(
-          color: Color(0xFF1E3A8A),
+        style: TextStyle(
+          color: Theme.of(context).textTheme.bodyLarge?.color,
           fontWeight: FontWeight.w600,
         ),
         items: ['This Month', 'Last Month', 'This Quarter', 'This Year']
@@ -280,8 +279,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
-                      color: Color(0xFF64748B),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
@@ -293,10 +292,10 @@ class DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 8),
             Text(
               CurrencyFormatter.format(value),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E293B),
+                color: Theme.of(context).textTheme.titleLarge?.color,
               ),
             ),
             const SizedBox(height: 4),
@@ -416,9 +415,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                              final date = DateTime.parse(sortedRecords[value.toInt()][DatabaseHelper.columnDate]);
                             return Text(
                               DateFormat('MMM d').format(date),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF64748B),
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                               ),
                             );
                           }
@@ -434,9 +433,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                          getTitlesWidget: (value, meta) {
                            return Text(
                              'Kz${value.toInt()}',
-                             style: const TextStyle(
+                             style: TextStyle(
                                fontSize: 12,
-                               color: Color(0xFF64748B),
+                               color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                              ),
                            );
                          },
@@ -503,9 +502,9 @@ class DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: Color(0xFF64748B),
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
           ),
         ),
       ],
@@ -542,14 +541,14 @@ class DashboardScreenState extends State<DashboardScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.list, color: Color(0xFF64748B)),
+                Icon(Icons.list, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Discrepancies by Cashier',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
               ],
@@ -560,24 +559,24 @@ class DashboardScreenState extends State<DashboardScreen> {
               child: Row(
                 children: [
                   Expanded(
-                                         child: Text(
-                       cashier['name'] as String,
-                       style: const TextStyle(
-                         fontSize: 14,
-                         color: Color(0xFF1E293B),
-                       ),
-                     ),
+                    child: Text(
+                      cashier['name'] as String,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
+                    ),
                   ),
-                                     Text(
-                     '${(cashier['discrepancy'] as double) >= 0 ? '+' : ''}${CurrencyFormatter.format(cashier['discrepancy'] as double)}',
-                     style: TextStyle(
-                       fontSize: 14,
-                       fontWeight: FontWeight.w600,
-                       color: (cashier['discrepancy'] as double) >= 0 
-                           ? const Color(0xFFEF4444) 
-                           : const Color(0xFF10B981),
-                     ),
-                   ),
+                  Text(
+                    '${(cashier['discrepancy'] as double) >= 0 ? '+' : ''}${CurrencyFormatter.format(cashier['discrepancy'] as double)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: (cashier['discrepancy'] as double) >= 0 
+                          ? const Color(0xFFEF4444) 
+                          : const Color(0xFF10B981),
+                    ),
+                  ),
                 ],
               ),
             )),
@@ -598,14 +597,14 @@ class DashboardScreenState extends State<DashboardScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.grid_on, color: Color(0xFF64748B)),
+                Icon(Icons.grid_on, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Transaction Details',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 const Spacer(),
@@ -613,11 +612,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                   width: 300,
                   child: TextField(
                     controller: _searchController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Search transactions...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      prefixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 ),
@@ -627,42 +626,42 @@ class DashboardScreenState extends State<DashboardScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                columns: const [
-                  DataColumn(label: Text('Date')),
-                  DataColumn(label: Text('Cashier')),
-                  DataColumn(label: Text('Cash Amount')),
-                  DataColumn(label: Text('TPA Amount')),
-                  DataColumn(label: Text('Total')),
-                  DataColumn(label: Text('Discrepancy')),
-                  DataColumn(label: Text('Status')),
+                columns: [
+                  DataColumn(label: Text('Date', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
+                  DataColumn(label: Text('Cashier', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
+                  DataColumn(label: Text('Cash Amount', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
+                  DataColumn(label: Text('TPA Amount', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
+                  DataColumn(label: Text('Total', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
+                  DataColumn(label: Text('Discrepancy', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
+                  DataColumn(label: Text('Status', style: TextStyle(color: Theme.of(context).textTheme.titleMedium?.color))),
                 ],
-                                 rows: records.take(10).map((record) {
-                   final date = DateTime.parse(record[DatabaseHelper.columnDate]);
-                   final cashier = record[DatabaseHelper.columnCashier] as String? ?? 'Unknown';
-                   final cash = record[DatabaseHelper.columnCash] as double;
-                   final tpa = record[DatabaseHelper.columnTpa] as double;
-                   final total = cash + tpa;
-                   final discrepancy = record[DatabaseHelper.columnDiscrepancy] as double;
-                   
-                   return DataRow(
-                     cells: [
-                       DataCell(Text(DateFormat('MM/dd/yyyy').format(date))),
-                       DataCell(Text(cashier)),
-                       DataCell(Text(CurrencyFormatter.format(cash))),
-                       DataCell(Text(CurrencyFormatter.format(tpa))),
-                       DataCell(Text(CurrencyFormatter.format(total))),
-                       DataCell(Text(
-                         '${discrepancy >= 0 ? '+' : ''}${CurrencyFormatter.format(discrepancy)}',
-                         style: TextStyle(
-                           color: discrepancy >= 0 
-                               ? const Color(0xFFEF4444) 
-                               : const Color(0xFF10B981),
-                         ),
-                       )),
-                       DataCell(_buildStatusChip('COMPLETED')),
-                     ],
-                   );
-                 }).toList(),
+                rows: records.take(10).map((record) {
+                  final date = DateTime.parse(record[DatabaseHelper.columnDate]);
+                  final cashier = record[DatabaseHelper.columnCashier] as String? ?? 'Unknown';
+                  final cash = record[DatabaseHelper.columnCash] as double;
+                  final tpa = record[DatabaseHelper.columnTpa] as double;
+                  final total = cash + tpa;
+                  final discrepancy = record[DatabaseHelper.columnDiscrepancy] as double;
+                  
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(DateFormat('MM/dd/yyyy').format(date), style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                      DataCell(Text(cashier, style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                      DataCell(Text(CurrencyFormatter.format(cash), style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                      DataCell(Text(CurrencyFormatter.format(tpa), style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                      DataCell(Text(CurrencyFormatter.format(total), style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+                      DataCell(Text(
+                        '${discrepancy >= 0 ? '+' : ''}${CurrencyFormatter.format(discrepancy)}',
+                        style: TextStyle(
+                          color: discrepancy >= 0 
+                              ? const Color(0xFFEF4444) 
+                              : const Color(0xFF10B981),
+                        ),
+                      )),
+                      DataCell(_buildStatusChip('COMPLETED')),
+                    ],
+                  );
+                }).toList(),
               ),
             ),
           ],

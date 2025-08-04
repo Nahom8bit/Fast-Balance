@@ -8,13 +8,13 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:salaries_app/main.dart';
-import 'package:salaries_app/login_screen.dart';
+import 'package:balancer/main.dart';
+import 'package:balancer/login_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('BalancerApp smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const BalanceClosingApp());
+    await tester.pumpWidget(const BalancerApp());
 
     // Verify that the LoginScreen is present
     expect(find.byType(LoginScreen), findsOneWidget);

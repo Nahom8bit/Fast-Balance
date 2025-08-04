@@ -24,23 +24,31 @@ class ReceiptPrinter {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Closing Report', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 10),
+              pw.Text('Mini Mercado', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+              pw.Text('Closing Report', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 8),
               pw.Text(
                 'Date: ${DateTime.parse(closingData[DatabaseHelper.columnDate]).toLocal().toString().substring(0, 16)}',
+                style: const pw.TextStyle(fontSize: 9),
+              ),
+              pw.Text(
+                'Cashier: ${closingData[DatabaseHelper.columnCashier]}',
                 style: const pw.TextStyle(fontSize: 9),
               ),
               pw.Divider(height: 10),
               
               _buildRow('Cash:', closingData['cash']),
               _buildRow('TPA:', closingData['tpa']),
-              _buildRow('Expenses:', closingData['expenses']),
               _buildRow('Opening Balance:', closingData['openingBalance']),
               pw.Divider(),
               _buildRow('Sales:', closingData['sales']),
               pw.Divider(),
+              _buildRow('Total Expenses:', closingData['expenses']),
+              pw.Divider(),
               _buildRow('Net Result (Counted):', closingData['netResult'], isBold: true),
               _buildRow('Discrepancy (vs. System Sales):', closingData['discrepancy'], isBold: true),
+              pw.SizedBox(height: 10),
+              pw.Text('--- End of Report ---', style: const pw.TextStyle(fontSize: 8)),
             ],
           );
         },

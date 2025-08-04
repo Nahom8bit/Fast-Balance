@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:salaries_app/record_detail_screen.dart';
-import 'package:salaries_app/dashboard_screen.dart';
-import 'package:salaries_app/user_management_screen.dart';
+import 'package:balancer/record_detail_screen.dart';
+import 'package:balancer/dashboard_screen.dart';
+import 'package:balancer/user_management_screen.dart';
 import 'database_helper.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
@@ -134,11 +134,15 @@ class AdminPanelState extends State<AdminPanel> {
                     itemCount: records.length,
                     itemBuilder: (context, index) {
                       final record = records[index];
+                      final date = DateTime.parse(record[DatabaseHelper.columnDate]);
+                      final formattedDate = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+                      final cashierName = record[DatabaseHelper.columnCashier] ?? 'Unknown';
+                      
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
-                          title: Text('Record ID: ${record[DatabaseHelper.columnId]}'),
-                          subtitle: Text('Date: ${DateTime.parse(record[DatabaseHelper.columnDate]).toLocal().toString().substring(0, 16)}'),
+                          title: Text('$cashierName : $formattedDate'),
+                          subtitle: Text('Record ID: ${record[DatabaseHelper.columnId]}'),
                           trailing: const Icon(Icons.arrow_forward_ios),
                           onTap: () {
                             Navigator.of(context).push(
