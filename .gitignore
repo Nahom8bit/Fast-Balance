@@ -67,14 +67,15 @@ bin/
 obj/
 
 # Installer files
-*.exe
 *.msi
 *.dmg
 *.pkg
 *.deb
 *.rpm
-installer/
 setup/
+
+# Allow specific installer files
+!salaries_app/installer/MiniMercadoBalanceSetup.exe
 
 # Compiled files
 *.class

@@ -1,5 +1,57 @@
 # Change Log - Mini Mercado Balance Closing System
 
+## [2024-12-19] - Enhanced Report Printing with Expense Details
+
+### Added
+- **Detailed Expense List in Reports**: Added individual expense items to printed closing reports
+- **Expense Breakdown**: Each expense now shows description and amount in the printed report
+- **Improved Report Layout**: Better organization with dedicated expenses section
+- **Word Wrapping**: Long expense descriptions are properly wrapped in the report
+
+### Report Printing Improvements
+- **Expense Details**: Individual expenses are now listed with descriptions and amounts
+- **Better Organization**: Clear separation between summary and detailed expenses
+- **Professional Layout**: Improved spacing and typography for better readability
+- **Empty State Handling**: Shows "No expenses recorded" when no expenses exist
+
+### Technical Details
+- **Database Integration**: Fetches detailed expenses from the expenses table
+- **Dynamic Content**: Report adapts based on whether expenses exist
+- **Formatting**: Proper currency formatting for all amounts
+- **Responsive Layout**: Handles long expense descriptions with word wrapping
+
+### Files Modified
+- `lib/receipt_printer.dart` - Enhanced with detailed expense list functionality
+
+---
+
+## [2024-12-19] - Windows Installer Package Creation
+
+### Added
+- **Windows Installer Package**: Successfully created MiniMercadoBalanceSetup.exe installer
+- **Professional Installation**: Complete setup package with modern wizard interface
+- **Automatic Installation**: One-click installation with desktop shortcut option
+- **Proper File Organization**: All dependencies and assets included in installer
+
+### Installation Features
+- **Modern Wizard Interface**: Professional installation wizard with Mini Mercado branding
+- **Desktop Shortcut**: Optional desktop icon creation during installation
+- **Start Menu Integration**: Proper start menu integration with uninstall option
+- **Automatic Launch**: Option to launch application after installation
+- **Low Privilege Installation**: No admin rights required for installation
+
+### Technical Details
+- **Installer Size**: ~12.3 MB compressed package
+- **Build Process**: Flutter Windows release build + Inno Setup compilation
+- **Dependencies Included**: All Flutter assets, DLLs, and runtime dependencies
+- **Installation Path**: Default installation to Program Files\Mini Mercado\Balance Closing System
+- **Architecture**: x64 Windows application
+
+### Files Created
+- `salaries_app/installer/MiniMercadoBalanceSetup.exe` - Complete Windows installer package
+
+---
+
 ## [2024-12-19] - Security & Repository Management Enhancement
 
 ### Added
