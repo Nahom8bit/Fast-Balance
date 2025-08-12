@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'settings_service.dart';
+import 'language_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,6 +12,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final SettingsService _settingsService = SettingsService();
+  final LanguageService _languageService = LanguageService();
   final _formKey = GlobalKey<FormState>();
   
   // Controllers for form fields
@@ -47,6 +49,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _initializeControllers();
     _loadSettings();
+    
+    // Listen to language changes
+    _languageService.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    setState(() {
+      // Rebuild UI when language changes
+    });
   }
 
   void _initializeControllers() {
@@ -142,12 +153,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _hasChanges = false;
       });
 
-      _showSuccessSnackBar('Settings saved successfully!');
+      _showSuccessSnackBar('settings_saved');
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      _showErrorSnackBar('Error saving settings: $e');
+      _showErrorSnackBar('error_saving$e');
     }
   }
 
@@ -162,7 +173,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(_languageService.getString(message)),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
@@ -172,7 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(_languageService.getString(message)),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 3),
       ),
@@ -203,10 +214,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       try {
         await _settingsService.resetToDefaults();
         await _loadSettings();
-        _showSuccessSnackBar('Settings reset to defaults!');
-      } catch (e) {
-        _showErrorSnackBar('Error resetting settings: $e');
-      }
+              _showSuccessSnackBar('settings_reset');
+    } catch (e) {
+      _showErrorSnackBar('error_resetting$e');
+    }
     }
   }
 
@@ -214,13 +225,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(_languageService.getString('settings')),
         actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _isLoading ? null : _saveSettings,
-              child: const Text('Save'),
-            ),
+                      if (_hasChanges)
+              TextButton(
+                onPressed: _isLoading ? null : _saveSettings,
+                child: Text(_languageService.getString('save')),
+              ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
@@ -236,9 +247,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'reset',
-                child: Text('Reset to Defaults'),
+                child: Text(_languageService.getString('reset_to_defaults')),
               ),
               const PopupMenuItem(
                 value: 'export',
@@ -267,9 +278,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 24),
                     _buildReceiptSettingsSection(),
                     const SizedBox(height: 24),
-                    _buildSystemSettingsSection(),
-                    const SizedBox(height: 24),
-                    _buildActionButtons(),
+                                         _buildSystemSettingsSection(),
+                     const SizedBox(height: 24),
+                     _buildLanguageSettingsSection(),
+                     const SizedBox(height: 24),
+                     _buildActionButtons(),
                   ],
                 ),
               ),
@@ -279,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildBusinessInformationSection() {
     return _buildSection(
-      title: 'Business Information',
+      title: _languageService.getString('business_information'),
       icon: Icons.business,
       children: [
         _buildTextField(
@@ -335,7 +348,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildCurrencySettingsSection() {
     return _buildSection(
-      title: 'Currency & Financial Settings',
+      title: _languageService.getString('currency_financial'),
       icon: Icons.attach_money,
       children: [
         _buildDropdownField(
@@ -399,7 +412,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildReceiptSettingsSection() {
     return _buildSection(
-      title: 'Receipt & Report Settings',
+      title: _languageService.getString('receipt_report'),
       icon: Icons.receipt,
       children: [
         _buildTextField(
@@ -457,9 +470,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildLanguageSettingsSection() {
+    return _buildSection(
+      title: _languageService.getString('language'),
+      icon: Icons.language,
+      children: [
+        _buildDropdownField(
+          label: _languageService.getString('language'),
+          value: _languageService.currentLocale.languageCode,
+          items: _languageService.getLanguageOptions().map((lang) {
+            return DropdownMenuItem(
+              value: lang['code'],
+              child: Text(lang['name']!),
+            );
+          }).toList(),
+          onChanged: (value) async {
+            if (value != null) {
+              await _languageService.setLanguage(value);
+              _markAsChanged();
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildSystemSettingsSection() {
     return _buildSection(
-      title: 'System Preferences',
+      title: _languageService.getString('system_preferences'),
       icon: Icons.settings,
       children: [
         _buildDropdownField(
@@ -652,7 +690,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ElevatedButton.icon(
             onPressed: _isLoading ? null : _saveSettings,
             icon: const Icon(Icons.save),
-            label: const Text('Save Settings'),
+            label: Text(_languageService.getString('save_settings')),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
@@ -663,7 +701,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: OutlinedButton.icon(
             onPressed: _isLoading ? null : _resetToDefaults,
             icon: const Icon(Icons.restore),
-            label: const Text('Reset to Defaults'),
+            label: Text(_languageService.getString('reset_to_defaults')),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),

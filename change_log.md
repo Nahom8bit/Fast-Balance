@@ -17,6 +17,7 @@
 - **Print Settings**: Paper size selection (80mm, A4, Letter, Legal) and print quality options
 - **Date/Time Formats**: Multiple date formats (MM/DD/YYYY, DD/MM/YYYY, etc.) and time formats
 - **System Preferences**: Theme selection, font sizes, auto-save intervals, session timeouts
+- **Multi-Language Support**: 10 languages (English, Spanish, Portuguese, French, German, Italian, Arabic, Chinese, Japanese, Korean)
 
 ### Technical Implementation
 - **Settings Service**: Singleton pattern with async getter/setter methods
@@ -35,6 +36,7 @@
 - `lib/settings_service.dart` - New comprehensive settings management system
 - `lib/settings_screen.dart` - Complete settings UI with organized sections
 - `lib/receipt_printer.dart` - Updated to use configurable business settings
+- `lib/language_service.dart` - New multi-language support system
 - `tasks.md` - Updated with completed high priority settings tasks
 
 ---

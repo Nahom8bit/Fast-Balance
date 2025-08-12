@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'database_helper.dart';
+import 'language_service.dart';
 
 class SettingsService {
   static final SettingsService _instance = SettingsService._internal();
@@ -257,6 +258,10 @@ class SettingsService {
   Future<void> setLocale(String locale) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, locale);
+    
+    // Update language service
+    final languageService = LanguageService();
+    await languageService.setLanguage(locale.split('_')[0]);
   }
 
   // System Preferences

@@ -143,7 +143,7 @@
   - [x] Add date format selection (MM/DD/YYYY, DD/MM/YYYY, etc.)
   - [x] Add time format selection (12-hour, 24-hour)
   - [ ] Add timezone selection
-  - [ ] Add locale/language selection
+  - [x] Add locale/language selection
 
 ### **Phase 2: Medium Priority Settings (Important)**
 - [ ] **User Management Settings:**
