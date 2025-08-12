@@ -1,75 +1,212 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'currency_formatter.dart';
-import 'update_service.dart';
-import 'update_dialog.dart';
-import 'theme_service.dart';
-import 'main.dart';
+import 'package:flutter/services.dart';
+import 'settings_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  SettingsScreenState createState() => SettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class SettingsScreenState extends State<SettingsScreen> {
-  String _selectedCurrency = 'Kz'; 
-  ThemeMode _selectedTheme = ThemeMode.system;
+class _SettingsScreenState extends State<SettingsScreen> {
+  final SettingsService _settingsService = SettingsService();
+  final _formKey = GlobalKey<FormState>();
+  
+  // Controllers for form fields
+  late TextEditingController _businessNameController;
+  late TextEditingController _businessAddressController;
+  late TextEditingController _businessPhoneController;
+  late TextEditingController _businessEmailController;
+  late TextEditingController _businessWebsiteController;
+  late TextEditingController _businessTaxIdController;
+  late TextEditingController _taxRateController;
+  late TextEditingController _defaultOpeningBalanceController;
+  late TextEditingController _receiptHeaderController;
+  late TextEditingController _receiptFooterController;
+  late TextEditingController _reportTitleController;
+  late TextEditingController _autoSaveIntervalController;
+  late TextEditingController _sessionTimeoutController;
+
+  // Dropdown values
+  String _selectedCurrency = 'USD';
+  String _selectedCurrencySymbol = '\$';
+  int _selectedDecimalPlaces = 2;
+  String _selectedPaperSize = '80mm';
+  String _selectedPrintQuality = 'normal';
+  String _selectedDateFormat = 'MM/dd/yyyy';
+  String _selectedTimeFormat = '12-hour';
+  String _selectedTheme = 'system';
+  String _selectedFontSize = 'medium';
+
+  bool _isLoading = true;
+  bool _hasChanges = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
     _loadSettings();
   }
 
+  void _initializeControllers() {
+    _businessNameController = TextEditingController();
+    _businessAddressController = TextEditingController();
+    _businessPhoneController = TextEditingController();
+    _businessEmailController = TextEditingController();
+    _businessWebsiteController = TextEditingController();
+    _businessTaxIdController = TextEditingController();
+    _taxRateController = TextEditingController();
+    _defaultOpeningBalanceController = TextEditingController();
+    _receiptHeaderController = TextEditingController();
+    _receiptFooterController = TextEditingController();
+    _reportTitleController = TextEditingController();
+    _autoSaveIntervalController = TextEditingController();
+    _sessionTimeoutController = TextEditingController();
+  }
+
   Future<void> _loadSettings() async {
-    await Future.wait([
-      _loadCurrency(),
-      _loadTheme(),
-    ]);
+    try {
+      final settings = await _settingsService.getAllSettings();
+      
+      setState(() {
+        _businessNameController.text = settings['businessName'] ?? '';
+        _businessAddressController.text = settings['businessAddress'] ?? '';
+        _businessPhoneController.text = settings['businessPhone'] ?? '';
+        _businessEmailController.text = settings['businessEmail'] ?? '';
+        _businessWebsiteController.text = settings['businessWebsite'] ?? '';
+        _businessTaxIdController.text = settings['businessTaxId'] ?? '';
+        _taxRateController.text = (settings['taxRate'] ?? 0.0).toString();
+        _defaultOpeningBalanceController.text = (settings['defaultOpeningBalance'] ?? 0.0).toString();
+        _receiptHeaderController.text = settings['receiptHeader'] ?? '';
+        _receiptFooterController.text = settings['receiptFooter'] ?? '';
+        _reportTitleController.text = settings['reportTitle'] ?? '';
+        _autoSaveIntervalController.text = (settings['autoSaveInterval'] ?? 30).toString();
+        _sessionTimeoutController.text = (settings['sessionTimeout'] ?? 30).toString();
+
+        _selectedCurrency = settings['currencyCode'] ?? 'USD';
+        _selectedCurrencySymbol = settings['currencySymbol'] ?? '\$';
+        _selectedDecimalPlaces = settings['decimalPlaces'] ?? 2;
+        _selectedPaperSize = settings['paperSize'] ?? '80mm';
+        _selectedPrintQuality = settings['printQuality'] ?? 'normal';
+        _selectedDateFormat = settings['dateFormat'] ?? 'MM/dd/yyyy';
+        _selectedTimeFormat = settings['timeFormat'] ?? '12-hour';
+        _selectedTheme = settings['theme'] ?? 'system';
+        _selectedFontSize = settings['fontSize'] ?? 'medium';
+
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showErrorSnackBar('Error loading settings: $e');
+    }
   }
 
-  Future<void> _loadCurrency() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _selectedCurrency = prefs.getString('currency') ?? 'Kz';
-    });
+  Future<void> _saveSettings() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Save all settings
+      await _settingsService.setBusinessName(_businessNameController.text);
+      await _settingsService.setBusinessAddress(_businessAddressController.text);
+      await _settingsService.setBusinessPhone(_businessPhoneController.text);
+      await _settingsService.setBusinessEmail(_businessEmailController.text);
+      await _settingsService.setBusinessWebsite(_businessWebsiteController.text);
+      await _settingsService.setBusinessTaxId(_businessTaxIdController.text);
+      await _settingsService.setTaxRate(double.tryParse(_taxRateController.text) ?? 0.0);
+      await _settingsService.setDefaultOpeningBalance(double.tryParse(_defaultOpeningBalanceController.text) ?? 0.0);
+      await _settingsService.setReceiptHeader(_receiptHeaderController.text);
+      await _settingsService.setReceiptFooter(_receiptFooterController.text);
+      await _settingsService.setReportTitle(_reportTitleController.text);
+      await _settingsService.setAutoSaveInterval(int.tryParse(_autoSaveIntervalController.text) ?? 30);
+      await _settingsService.setSessionTimeout(int.tryParse(_sessionTimeoutController.text) ?? 30);
+
+      await _settingsService.setCurrencyCode(_selectedCurrency);
+      await _settingsService.setCurrencySymbol(_selectedCurrencySymbol);
+      await _settingsService.setDecimalPlaces(_selectedDecimalPlaces);
+      await _settingsService.setPaperSize(_selectedPaperSize);
+      await _settingsService.setPrintQuality(_selectedPrintQuality);
+      await _settingsService.setDateFormat(_selectedDateFormat);
+      await _settingsService.setTimeFormat(_selectedTimeFormat);
+      await _settingsService.setTheme(_selectedTheme);
+      await _settingsService.setFontSize(_selectedFontSize);
+
+      setState(() {
+        _isLoading = false;
+        _hasChanges = false;
+      });
+
+      _showSuccessSnackBar('Settings saved successfully!');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showErrorSnackBar('Error saving settings: $e');
+    }
   }
 
-  Future<void> _loadTheme() async {
-    final themeMode = await ThemeService.getThemeMode();
-    setState(() {
-      _selectedTheme = themeMode;
-    });
+  void _markAsChanged() {
+    if (!_hasChanges) {
+      setState(() {
+        _hasChanges = true;
+      });
+    }
   }
 
-  Future<void> _setCurrency(String currency) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('currency', currency);
-    CurrencyFormatter.setCurrency(currency);
-    setState(() {
-      _selectedCurrency = currency;
-    });
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
-  Future<void> _setTheme(ThemeMode themeMode) async {
-    setState(() {
-      _selectedTheme = themeMode;
-    });
-    
-    // Use the global theme notifier to update the theme
-    final themeNotifier = ThemeNotifier();
-    await themeNotifier.setTheme(themeMode);
-    
-    // Show feedback to user
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Theme changed to ${ThemeService.getThemeModeString(themeMode)}'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  Future<void> _resetToDefaults() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset to Defaults'),
+        content: const Text('Are you sure you want to reset all settings to their default values? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _settingsService.resetToDefaults();
+        await _loadSettings();
+        _showSuccessSnackBar('Settings reset to defaults!');
+      } catch (e) {
+        _showErrorSnackBar('Error resetting settings: $e');
+      }
     }
   }
 
@@ -78,113 +215,479 @@ class SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
-      ),
-      body: ListView(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.palette),
-            title: const Text('Theme'),
-            subtitle: const Text('Choose your preferred theme'),
-            trailing: DropdownButton<ThemeMode>(
-              value: _selectedTheme,
-              onChanged: (ThemeMode? newValue) {
-                if (newValue != null) {
-                  _setTheme(newValue);
-                }
-              },
-              items: [
-                ThemeMode.light,
-                ThemeMode.dark,
-                ThemeMode.system,
-              ].map<DropdownMenuItem<ThemeMode>>((ThemeMode value) {
-                return DropdownMenuItem<ThemeMode>(
-                  value: value,
-                  child: Text(ThemeService.getThemeModeString(value)),
-                );
-              }).toList(),
+        actions: [
+          if (_hasChanges)
+            TextButton(
+              onPressed: _isLoading ? null : _saveSettings,
+              child: const Text('Save'),
             ),
-          ),
-          const Divider(),
-          ListTile(
-            title: const Text('Currency'),
-            subtitle: const Text('Select your preferred currency'),
-            trailing: DropdownButton<String>(
-              value: _selectedCurrency,
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  _setCurrency(newValue);
-                }
-              },
-              items: CurrencyFormatter.getAvailableCurrencies()
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.system_update),
-            title: const Text('Check for Updates'),
-            subtitle: const Text('Check for the latest version'),
-            onTap: _checkForUpdates,
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'reset':
+                  _resetToDefaults();
+                  break;
+                case 'export':
+                  // TODO: Implement export settings
+                  break;
+                case 'import':
+                  // TODO: Implement import settings
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'reset',
+                child: Text('Reset to Defaults'),
+              ),
+              const PopupMenuItem(
+                value: 'export',
+                child: Text('Export Settings'),
+              ),
+              const PopupMenuItem(
+                value: 'import',
+                child: Text('Import Settings'),
+              ),
+            ],
           ),
         ],
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildBusinessInformationSection(),
+                    const SizedBox(height: 24),
+                    _buildCurrencySettingsSection(),
+                    const SizedBox(height: 24),
+                    _buildReceiptSettingsSection(),
+                    const SizedBox(height: 24),
+                    _buildSystemSettingsSection(),
+                    const SizedBox(height: 24),
+                    _buildActionButtons(),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
-  Future<void> _checkForUpdates() async {
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
+  Widget _buildBusinessInformationSection() {
+    return _buildSection(
+      title: 'Business Information',
+      icon: Icons.business,
+      children: [
+        _buildTextField(
+          controller: _businessNameController,
+          label: 'Business Name',
+          hint: 'Enter your business name',
+          validator: (value) => value?.isEmpty == true ? 'Business name is required' : null,
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _businessAddressController,
+          label: 'Business Address',
+          hint: 'Enter your business address',
+          maxLines: 2,
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _businessPhoneController,
+          label: 'Phone Number',
+          hint: 'Enter your phone number',
+          keyboardType: TextInputType.phone,
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _businessEmailController,
+          label: 'Email Address',
+          hint: 'Enter your email address',
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value?.isNotEmpty == true && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+              return 'Please enter a valid email address';
+            }
+            return null;
+          },
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _businessWebsiteController,
+          label: 'Website (Optional)',
+          hint: 'Enter your website URL',
+          keyboardType: TextInputType.url,
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _businessTaxIdController,
+          label: 'Tax ID / Business Registration',
+          hint: 'Enter your tax ID or business registration number',
+          onChanged: (_) => _markAsChanged(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCurrencySettingsSection() {
+    return _buildSection(
+      title: 'Currency & Financial Settings',
+      icon: Icons.attach_money,
+      children: [
+        _buildDropdownField(
+          label: 'Currency',
+          value: _selectedCurrency,
+          items: SettingsService.currencyOptions.map((currency) {
+            return DropdownMenuItem(
+              value: currency['code'],
+              child: Text('${currency['code']} - ${currency['name']}'),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedCurrency = value!;
+              _selectedCurrencySymbol = SettingsService.currencyOptions
+                  .firstWhere((c) => c['code'] == value)['symbol']!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildTextField(
+          controller: _taxRateController,
+          label: 'Tax Rate (%)',
+          hint: 'Enter tax rate as percentage',
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          validator: (value) {
+            final rate = double.tryParse(value ?? '');
+            if (rate != null && (rate < 0 || rate > 100)) {
+              return 'Tax rate must be between 0 and 100';
+            }
+            return null;
+          },
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _defaultOpeningBalanceController,
+          label: 'Default Opening Balance',
+          hint: 'Enter default opening balance',
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildDropdownField(
+          label: 'Decimal Places',
+          value: _selectedDecimalPlaces,
+          items: [0, 1, 2, 3].map((places) {
+            return DropdownMenuItem(
+              value: places,
+              child: Text('$places decimal places'),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedDecimalPlaces = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReceiptSettingsSection() {
+    return _buildSection(
+      title: 'Receipt & Report Settings',
+      icon: Icons.receipt,
+      children: [
+        _buildTextField(
+          controller: _receiptHeaderController,
+          label: 'Receipt Header',
+          hint: 'Text to display at the top of receipts',
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _receiptFooterController,
+          label: 'Receipt Footer',
+          hint: 'Text to display at the bottom of receipts',
+          maxLines: 2,
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _reportTitleController,
+          label: 'Report Title',
+          hint: 'Title for printed reports',
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildDropdownField(
+          label: 'Paper Size',
+          value: _selectedPaperSize,
+          items: SettingsService.paperSizeOptions.map((size) {
+            return DropdownMenuItem(
+              value: size,
+              child: Text(size),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedPaperSize = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: 'Print Quality',
+          value: _selectedPrintQuality,
+          items: SettingsService.printQualityOptions.map((quality) {
+            return DropdownMenuItem(
+              value: quality,
+              child: Text(quality.toUpperCase()),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedPrintQuality = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSystemSettingsSection() {
+    return _buildSection(
+      title: 'System Preferences',
+      icon: Icons.settings,
+      children: [
+        _buildDropdownField(
+          label: 'Date Format',
+          value: _selectedDateFormat,
+          items: SettingsService.dateFormatOptions.map((format) {
+            return DropdownMenuItem(
+              value: format['value'],
+              child: Text(format['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedDateFormat = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: 'Time Format',
+          value: _selectedTimeFormat,
+          items: SettingsService.timeFormatOptions.map((format) {
+            return DropdownMenuItem(
+              value: format['value'],
+              child: Text(format['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedTimeFormat = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: 'Theme',
+          value: _selectedTheme,
+          items: SettingsService.themeOptions.map((theme) {
+            return DropdownMenuItem(
+              value: theme['value'],
+              child: Text(theme['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedTheme = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: 'Font Size',
+          value: _selectedFontSize,
+          items: SettingsService.fontSizeOptions.map((size) {
+            return DropdownMenuItem(
+              value: size['value'],
+              child: Text(size['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedFontSize = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildTextField(
+          controller: _autoSaveIntervalController,
+          label: 'Auto-save Interval (seconds)',
+          hint: 'Enter auto-save interval in seconds',
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            final interval = int.tryParse(value ?? '');
+            if (interval != null && interval < 5) {
+              return 'Auto-save interval must be at least 5 seconds';
+            }
+            return null;
+          },
+          onChanged: (_) => _markAsChanged(),
+        ),
+        _buildTextField(
+          controller: _sessionTimeoutController,
+          label: 'Session Timeout (minutes)',
+          hint: 'Enter session timeout in minutes',
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            final timeout = int.tryParse(value ?? '');
+            if (timeout != null && timeout < 1) {
+              return 'Session timeout must be at least 1 minute';
+            }
+            return null;
+          },
+          onChanged: (_) => _markAsChanged(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Checking for updates...'),
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...children,
           ],
         ),
       ),
     );
-
-    try {
-      final updateInfo = await UpdateService.checkForUpdates();
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-      }
-      
-      if (updateInfo != null) {
-        await UpdateService.setLastUpdateCheck();
-        if (mounted) {
-          _showUpdateDialog(updateInfo);
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You are using the latest version!')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to check for updates')),
-        );
-      }
-    }
   }
 
-  void _showUpdateDialog(UpdateInfo updateInfo) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => UpdateDialog(updateInfo: updateInfo),
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+    void Function(String)? onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]
+              : Colors.grey[100],
+        ),
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        validator: validator,
+        onChanged: onChanged,
+      ),
     );
+  }
+
+  Widget _buildDropdownField<T>({
+    required String label,
+    required T value,
+    required List<DropdownMenuItem<T>> items,
+    required void Function(T?) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]
+              : Colors.grey[100],
+        ),
+        items: items,
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _isLoading ? null : _saveSettings,
+            icon: const Icon(Icons.save),
+            label: const Text('Save Settings'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _isLoading ? null : _resetToDefaults,
+            icon: const Icon(Icons.restore),
+            label: const Text('Reset to Defaults'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _businessNameController.dispose();
+    _businessAddressController.dispose();
+    _businessPhoneController.dispose();
+    _businessEmailController.dispose();
+    _businessWebsiteController.dispose();
+    _businessTaxIdController.dispose();
+    _taxRateController.dispose();
+    _defaultOpeningBalanceController.dispose();
+    _receiptHeaderController.dispose();
+    _receiptFooterController.dispose();
+    _reportTitleController.dispose();
+    _autoSaveIntervalController.dispose();
+    _sessionTimeoutController.dispose();
+    super.dispose();
   }
 }

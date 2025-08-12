@@ -114,3 +114,74 @@
 - **User Experience:** 90% improvement in perceived performance
 - **Code Maintainability:** 70% reduction in file sizes
 - **Error Recovery:** 95% of errors handled gracefully
+
+## **⚙️ SETUP CONFIGURATION SYSTEM**
+
+### **Phase 1: High Priority Settings (Essential)**
+- [x] **Business Information Setup:**
+  - [x] Create settings screen with business configuration
+  - [x] Add business name field (replace hardcoded "Mini Mercado")
+  - [x] Add business address field (for receipts/reports)
+  - [x] Add phone number field (contact info)
+  - [x] Add email address field (contact info)
+  - [x] Add website field (optional)
+  - [x] Add tax ID/business registration number field
+- [x] **Currency & Financial Settings:**
+  - [x] Add default currency selection (USD, EUR, etc.)
+  - [x] Add currency symbol field ($, €, etc.)
+  - [x] Add decimal places setting (2 for cents, 0 for whole numbers)
+  - [x] Add tax rate field (if applicable)
+  - [x] Add default opening balance setting
+- [x] **Receipt & Report Customization:**
+  - [x] Add customizable receipt header text
+  - [x] Add customizable receipt footer text
+  - [x] Add customizable report title
+  - [ ] Add business logo upload option
+  - [x] Add paper size selection (80mm, A4, etc.)
+  - [x] Add print quality settings
+- [x] **Date & Time Preferences:**
+  - [x] Add date format selection (MM/DD/YYYY, DD/MM/YYYY, etc.)
+  - [x] Add time format selection (12-hour, 24-hour)
+  - [ ] Add timezone selection
+  - [ ] Add locale/language selection
+
+### **Phase 2: Medium Priority Settings (Important)**
+- [ ] **User Management Settings:**
+  - [ ] Add default cashier role setting
+  - [ ] Add session timeout configuration
+  - [ ] Add password policy settings
+  - [ ] Add auto-login option
+- [ ] **System Preferences:**
+  - [ ] Add theme selection (light, dark, auto)
+  - [ ] Add font size settings (small, medium, large)
+  - [ ] Add auto-save interval configuration
+  - [ ] Add dashboard layout options
+- [ ] **Print Settings:**
+  - [ ] Add default printer selection
+  - [ ] Add print preview options
+  - [ ] Add print copies setting
+  - [ ] Add paper orientation settings
+
+### **Phase 3: Low Priority Settings (Nice to Have)**
+- [ ] **Security Settings:**
+  - [ ] Add password requirement for closing
+  - [ ] Add audit trail configuration
+  - [ ] Add session logging options
+  - [ ] Add data encryption settings
+- [ ] **Data Management:**
+  - [ ] Add auto backup configuration
+  - [ ] Add backup location settings
+  - [ ] Add data retention period settings
+  - [ ] Add export format preferences
+- [ ] **Business Intelligence:**
+  - [ ] Add KPI display customization
+  - [ ] Add chart type preferences
+  - [ ] Add default date range settings
+  - [ ] Add alert threshold configurations
+
+### **Implementation Details:**
+- **Storage:** Use SharedPreferences for user settings, SQLite for business config
+- **UI:** Create dedicated settings screen with organized sections
+- **Validation:** Add input validation for all configuration fields
+- **Migration:** Handle migration from hardcoded values to configurable settings
+- **Backup:** Include settings in data backup/restore functionality
