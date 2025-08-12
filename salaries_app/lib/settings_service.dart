@@ -36,6 +36,18 @@ class SettingsService {
   static const String _fontSizeKey = 'font_size';
   static const String _autoSaveIntervalKey = 'auto_save_interval';
   static const String _sessionTimeoutKey = 'session_timeout';
+  
+  // Print Settings
+  static const String _defaultPrinterKey = 'default_printer';
+  static const String _printPreviewKey = 'print_preview';
+  static const String _printCopiesKey = 'print_copies';
+  static const String _paperOrientationKey = 'paper_orientation';
+  
+  // User Management Settings
+  static const String _defaultCashierRoleKey = 'default_cashier_role';
+  static const String _passwordPolicyKey = 'password_policy';
+  static const String _autoLoginKey = 'auto_login';
+  static const String _requirePasswordForClosingKey = 'require_password_for_closing';
 
   // Default values
   static const String _defaultBusinessName = 'Mini Mercado';
@@ -55,6 +67,18 @@ class SettingsService {
   static const String _defaultFontSize = 'medium';
   static const int _defaultAutoSaveInterval = 30; // seconds
   static const int _defaultSessionTimeout = 30; // minutes
+  
+  // Print Settings Defaults
+  static const String _defaultPrinter = '';
+  static const bool _defaultPrintPreview = true;
+  static const int _defaultPrintCopies = 1;
+  static const String _defaultPaperOrientation = 'portrait';
+  
+  // User Management Defaults
+  static const String _defaultCashierRole = 'cashier';
+  static const String _defaultPasswordPolicy = 'medium';
+  static const bool _defaultAutoLogin = false;
+  static const bool _defaultRequirePasswordForClosing = false;
 
   // Business Information
   Future<String> getBusinessName() async {
@@ -305,6 +329,88 @@ class SettingsService {
     await prefs.setInt(_sessionTimeoutKey, minutes);
   }
 
+  // Print Settings
+  Future<String> getDefaultPrinter() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_defaultPrinterKey) ?? _defaultPrinter;
+  }
+
+  Future<void> setDefaultPrinter(String printer) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_defaultPrinterKey, printer);
+  }
+
+  Future<bool> getPrintPreview() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_printPreviewKey) ?? _defaultPrintPreview;
+  }
+
+  Future<void> setPrintPreview(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_printPreviewKey, enabled);
+  }
+
+  Future<int> getPrintCopies() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_printCopiesKey) ?? _defaultPrintCopies;
+  }
+
+  Future<void> setPrintCopies(int copies) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_printCopiesKey, copies);
+  }
+
+  Future<String> getPaperOrientation() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_paperOrientationKey) ?? _defaultPaperOrientation;
+  }
+
+  Future<void> setPaperOrientation(String orientation) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_paperOrientationKey, orientation);
+  }
+
+  // User Management Settings
+  Future<String> getDefaultCashierRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_defaultCashierRoleKey) ?? _defaultCashierRole;
+  }
+
+  Future<void> setDefaultCashierRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_defaultCashierRoleKey, role);
+  }
+
+  Future<String> getPasswordPolicy() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_passwordPolicyKey) ?? _defaultPasswordPolicy;
+  }
+
+  Future<void> setPasswordPolicy(String policy) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_passwordPolicyKey, policy);
+  }
+
+  Future<bool> getAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoLoginKey) ?? _defaultAutoLogin;
+  }
+
+  Future<void> setAutoLogin(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoLoginKey, enabled);
+  }
+
+  Future<bool> getRequirePasswordForClosing() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_requirePasswordForClosingKey) ?? _defaultRequirePasswordForClosing;
+  }
+
+  Future<void> setRequirePasswordForClosing(bool required) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_requirePasswordForClosingKey, required);
+  }
+
   // Utility methods
   Future<Map<String, dynamic>> getAllSettings() async {
     return {
@@ -332,6 +438,10 @@ class SettingsService {
       'fontSize': await getFontSize(),
       'autoSaveInterval': await getAutoSaveInterval(),
       'sessionTimeout': await getSessionTimeout(),
+      'defaultPrinter': await getDefaultPrinter(),
+      'printPreview': await getPrintPreview(),
+      'printCopies': await getPrintCopies(),
+      'paperOrientation': await getPaperOrientation(),
     };
   }
 
@@ -393,5 +503,35 @@ class SettingsService {
     {'value': 'small', 'label': 'Small'},
     {'value': 'medium', 'label': 'Medium'},
     {'value': 'large', 'label': 'Large'},
+  ];
+
+  // User role options
+  static const List<Map<String, String>> userRoleOptions = [
+    {'value': 'cashier', 'label': 'Cashier'},
+    {'value': 'supervisor', 'label': 'Supervisor'},
+    {'value': 'manager', 'label': 'Manager'},
+    {'value': 'admin', 'label': 'Administrator'},
+  ];
+
+  // Password policy options
+  static const List<Map<String, String>> passwordPolicyOptions = [
+    {'value': 'low', 'label': 'Low (4+ characters)'},
+    {'value': 'medium', 'label': 'Medium (6+ characters, letters & numbers)'},
+    {'value': 'high', 'label': 'High (8+ characters, mixed case, symbols)'},
+    {'value': 'strict', 'label': 'Strict (10+ characters, complex requirements)'},
+  ];
+
+  // Print settings options
+  static const List<Map<String, String>> paperOrientationOptions = [
+    {'value': 'portrait', 'label': 'Portrait'},
+    {'value': 'landscape', 'label': 'Landscape'},
+  ];
+
+  static const List<Map<String, String>> printCopiesOptions = [
+    {'value': '1', 'label': '1 Copy'},
+    {'value': '2', 'label': '2 Copies'},
+    {'value': '3', 'label': '3 Copies'},
+    {'value': '4', 'label': '4 Copies'},
+    {'value': '5', 'label': '5 Copies'},
   ];
 }

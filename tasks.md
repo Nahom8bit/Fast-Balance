@@ -146,21 +146,21 @@
   - [x] Add locale/language selection
 
 ### **Phase 2: Medium Priority Settings (Important)**
-- [ ] **User Management Settings:**
-  - [ ] Add default cashier role setting
-  - [ ] Add session timeout configuration
-  - [ ] Add password policy settings
-  - [ ] Add auto-login option
-- [ ] **System Preferences:**
-  - [ ] Add theme selection (light, dark, auto)
-  - [ ] Add font size settings (small, medium, large)
-  - [ ] Add auto-save interval configuration
-  - [ ] Add dashboard layout options
-- [ ] **Print Settings:**
-  - [ ] Add default printer selection
-  - [ ] Add print preview options
-  - [ ] Add print copies setting
-  - [ ] Add paper orientation settings
+- [x] **User Management Settings:**
+  - [x] Add default cashier role setting
+  - [x] Add session timeout configuration
+  - [x] Add password policy settings
+  - [x] Add auto-login option
+- [x] **System Preferences:**
+  - [x] Add theme selection (light, dark, auto)
+  - [x] Add font size settings (small, medium, large)
+  - [x] Add auto-save interval configuration
+  - [x] Add session timeout configuration
+- [x] **Print Settings:**
+  - [x] Add default printer selection
+  - [x] Add print preview options
+  - [x] Add print copies setting
+  - [x] Add paper orientation settings
 
 ### **Phase 3: Low Priority Settings (Nice to Have)**
 - [ ] **Security Settings:**

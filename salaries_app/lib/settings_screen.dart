@@ -40,6 +40,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedTimeFormat = '12-hour';
   String _selectedTheme = 'system';
   String _selectedFontSize = 'medium';
+  
+  // Print Settings values
+  String _selectedDefaultPrinter = '';
+  bool _printPreview = true;
+  int _selectedPrintCopies = 1;
+  String _selectedPaperOrientation = 'portrait';
+  
+  // User Management values
+  String _selectedDefaultCashierRole = 'cashier';
+  String _selectedPasswordPolicy = 'medium';
+  bool _autoLogin = false;
+  bool _requirePasswordForClosing = false;
 
   bool _isLoading = true;
   bool _hasChanges = false;
@@ -105,6 +117,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _selectedTheme = settings['theme'] ?? 'system';
         _selectedFontSize = settings['fontSize'] ?? 'medium';
 
+        // Print Settings
+        _selectedDefaultPrinter = settings['defaultPrinter'] ?? '';
+        _printPreview = settings['printPreview'] ?? true;
+        _selectedPrintCopies = settings['printCopies'] ?? 1;
+        _selectedPaperOrientation = settings['paperOrientation'] ?? 'portrait';
+
+        // User Management settings
+        _selectedDefaultCashierRole = settings['defaultCashierRole'] ?? 'cashier';
+        _selectedPasswordPolicy = settings['passwordPolicy'] ?? 'medium';
+        _autoLogin = settings['autoLogin'] ?? false;
+        _requirePasswordForClosing = settings['requirePasswordForClosing'] ?? false;
+
         _isLoading = false;
       });
     } catch (e) {
@@ -147,6 +171,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _settingsService.setTimeFormat(_selectedTimeFormat);
       await _settingsService.setTheme(_selectedTheme);
       await _settingsService.setFontSize(_selectedFontSize);
+
+      // Save Print Settings
+      await _settingsService.setDefaultPrinter(_selectedDefaultPrinter);
+      await _settingsService.setPrintPreview(_printPreview);
+      await _settingsService.setPrintCopies(_selectedPrintCopies);
+      await _settingsService.setPaperOrientation(_selectedPaperOrientation);
+
+      // Save User Management settings
+      await _settingsService.setDefaultCashierRole(_selectedDefaultCashierRole);
+      await _settingsService.setPasswordPolicy(_selectedPasswordPolicy);
+      await _settingsService.setAutoLogin(_autoLogin);
+      await _settingsService.setRequirePasswordForClosing(_requirePasswordForClosing);
 
       setState(() {
         _isLoading = false;
@@ -279,6 +315,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildReceiptSettingsSection(),
                     const SizedBox(height: 24),
                                          _buildSystemSettingsSection(),
+                     const SizedBox(height: 24),
+                     _buildUserManagementSection(),
+                     const SizedBox(height: 24),
+                     _buildPrintSettingsSection(),
                      const SizedBox(height: 24),
                      _buildLanguageSettingsSection(),
                      const SizedBox(height: 24),
@@ -470,6 +510,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildUserManagementSection() {
+    return _buildSection(
+      title: 'User Management',
+      icon: Icons.people,
+      children: [
+        _buildDropdownField(
+          label: 'Default Cashier Role',
+          value: _selectedDefaultCashierRole,
+          items: SettingsService.userRoleOptions.map((role) {
+            return DropdownMenuItem(
+              value: role['value'],
+              child: Text(role['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedDefaultCashierRole = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: 'Password Policy',
+          value: _selectedPasswordPolicy,
+          items: SettingsService.passwordPolicyOptions.map((policy) {
+            return DropdownMenuItem(
+              value: policy['value'],
+              child: Text(policy['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedPasswordPolicy = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildSwitchField(
+          label: 'Auto Login',
+          value: _autoLogin,
+          onChanged: (value) {
+            setState(() {
+              _autoLogin = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildSwitchField(
+          label: 'Require Password for Closing',
+          value: _requirePasswordForClosing,
+          onChanged: (value) {
+            setState(() {
+              _requirePasswordForClosing = value;
+            });
+            _markAsChanged();
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildLanguageSettingsSection() {
     return _buildSection(
       title: _languageService.getString('language'),
@@ -596,6 +697,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildPrintSettingsSection() {
+    return _buildSection(
+      title: 'Print Settings', // TODO: Localize this title
+      icon: Icons.print,
+      children: [
+        _buildTextField(
+          controller: TextEditingController(text: _selectedDefaultPrinter),
+          label: 'Default Printer',
+          hint: 'Enter default printer name or leave empty for system default',
+          onChanged: (value) {
+            _selectedDefaultPrinter = value;
+            _markAsChanged();
+          },
+        ),
+        _buildSwitchField(
+          label: 'Show Print Preview',
+          value: _printPreview,
+          onChanged: (value) {
+            setState(() {
+              _printPreview = value;
+              _markAsChanged();
+            });
+          },
+        ),
+        _buildDropdownField(
+          label: 'Print Copies',
+          value: _selectedPrintCopies.toString(),
+          items: SettingsService.printCopiesOptions.map((copies) {
+            return DropdownMenuItem(
+              value: copies['value'],
+              child: Text(copies['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _selectedPrintCopies = int.tryParse(value) ?? 1;
+                _markAsChanged();
+              });
+            }
+          },
+        ),
+        _buildDropdownField(
+          label: 'Paper Orientation',
+          value: _selectedPaperOrientation,
+          items: SettingsService.paperOrientationOptions.map((orientation) {
+            return DropdownMenuItem(
+              value: orientation['value'],
+              child: Text(orientation['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _selectedPaperOrientation = value;
+                _markAsChanged();
+              });
+            }
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildSection({
     required String title,
     required IconData icon,
@@ -678,6 +843,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         items: items,
         onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildSwitchField({
+    required String label,
+    required bool value,
+    required void Function(bool) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+          ),
+        ],
       ),
     );
   }
