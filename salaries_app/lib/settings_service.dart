@@ -48,6 +48,13 @@ class SettingsService {
   static const String _passwordPolicyKey = 'password_policy';
   static const String _autoLoginKey = 'auto_login';
   static const String _requirePasswordForClosingKey = 'require_password_for_closing';
+  
+  // Security Settings
+  static const String _auditTrailEnabledKey = 'audit_trail_enabled';
+  static const String _sessionLoggingEnabledKey = 'session_logging_enabled';
+  static const String _dataEncryptionEnabledKey = 'data_encryption_enabled';
+  static const String _auditLogRetentionDaysKey = 'audit_log_retention_days';
+  static const String _sessionLogRetentionDaysKey = 'session_log_retention_days';
 
   // Default values
   static const String _defaultBusinessName = 'Mini Mercado';
@@ -79,6 +86,13 @@ class SettingsService {
   static const String _defaultPasswordPolicy = 'medium';
   static const bool _defaultAutoLogin = false;
   static const bool _defaultRequirePasswordForClosing = false;
+  
+  // Security Settings Defaults
+  static const bool _defaultAuditTrailEnabled = false;
+  static const bool _defaultSessionLoggingEnabled = false;
+  static const bool _defaultDataEncryptionEnabled = false;
+  static const int _defaultAuditLogRetentionDays = 90;
+  static const int _defaultSessionLogRetentionDays = 30;
 
   // Business Information
   Future<String> getBusinessName() async {
@@ -411,6 +425,57 @@ class SettingsService {
     await prefs.setBool(_requirePasswordForClosingKey, required);
   }
 
+  // Security Settings
+  Future<bool> getAuditTrailEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_auditTrailEnabledKey) ?? _defaultAuditTrailEnabled;
+  }
+
+  Future<void> setAuditTrailEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_auditTrailEnabledKey, enabled);
+  }
+
+  Future<bool> getSessionLoggingEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_sessionLoggingEnabledKey) ?? _defaultSessionLoggingEnabled;
+  }
+
+  Future<void> setSessionLoggingEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_sessionLoggingEnabledKey, enabled);
+  }
+
+  Future<bool> getDataEncryptionEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_dataEncryptionEnabledKey) ?? _defaultDataEncryptionEnabled;
+  }
+
+  Future<void> setDataEncryptionEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_dataEncryptionEnabledKey, enabled);
+  }
+
+  Future<int> getAuditLogRetentionDays() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_auditLogRetentionDaysKey) ?? _defaultAuditLogRetentionDays;
+  }
+
+  Future<void> setAuditLogRetentionDays(int days) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_auditLogRetentionDaysKey, days);
+  }
+
+  Future<int> getSessionLogRetentionDays() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_sessionLogRetentionDaysKey) ?? _defaultSessionLogRetentionDays;
+  }
+
+  Future<void> setSessionLogRetentionDays(int days) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_sessionLogRetentionDaysKey, days);
+  }
+
   // Utility methods
   Future<Map<String, dynamic>> getAllSettings() async {
     return {
@@ -442,6 +507,11 @@ class SettingsService {
       'printPreview': await getPrintPreview(),
       'printCopies': await getPrintCopies(),
       'paperOrientation': await getPaperOrientation(),
+      'auditTrailEnabled': await getAuditTrailEnabled(),
+      'sessionLoggingEnabled': await getSessionLoggingEnabled(),
+      'dataEncryptionEnabled': await getDataEncryptionEnabled(),
+      'auditLogRetentionDays': await getAuditLogRetentionDays(),
+      'sessionLogRetentionDays': await getSessionLogRetentionDays(),
     };
   }
 
@@ -533,5 +603,22 @@ class SettingsService {
     {'value': '3', 'label': '3 Copies'},
     {'value': '4', 'label': '4 Copies'},
     {'value': '5', 'label': '5 Copies'},
+  ];
+
+  // Security settings options
+  static const List<Map<String, String>> auditLogRetentionOptions = [
+    {'value': '30', 'label': '30 Days'},
+    {'value': '60', 'label': '60 Days'},
+    {'value': '90', 'label': '90 Days'},
+    {'value': '180', 'label': '180 Days'},
+    {'value': '365', 'label': '1 Year'},
+  ];
+
+  static const List<Map<String, String>> sessionLogRetentionOptions = [
+    {'value': '7', 'label': '7 Days'},
+    {'value': '15', 'label': '15 Days'},
+    {'value': '30', 'label': '30 Days'},
+    {'value': '60', 'label': '60 Days'},
+    {'value': '90', 'label': '90 Days'},
   ];
 }

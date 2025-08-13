@@ -117,6 +117,20 @@ class LanguageService extends ChangeNotifier {
       'font_small': 'Small',
       'font_medium': 'Medium',
       'font_large': 'Large',
+      
+      // Security Settings
+      'security_settings': 'Security Settings',
+      'audit_trail': 'Audit Trail',
+      'audit_trail_enabled': 'Enable Audit Trail',
+      'session_logging': 'Session Logging',
+      'session_logging_enabled': 'Enable Session Logging',
+      'data_encryption': 'Data Encryption',
+      'data_encryption_enabled': 'Enable Data Encryption',
+      'audit_log_retention': 'Audit Log Retention (Days)',
+      'session_log_retention': 'Session Log Retention (Days)',
+      'audit_trail_description': 'Track all system activities and changes',
+      'session_logging_description': 'Log user login/logout and session activities',
+      'data_encryption_description': 'Encrypt sensitive data in the database',
     },
     'es': {
       // Business Information
@@ -207,6 +221,20 @@ class LanguageService extends ChangeNotifier {
       'font_small': 'Pequeño',
       'font_medium': 'Mediano',
       'font_large': 'Grande',
+      
+      // Security Settings
+      'security_settings': 'Configuración de Seguridad',
+      'audit_trail': 'Rastro de Auditoría',
+      'audit_trail_enabled': 'Habilitar Rastro de Auditoría',
+      'session_logging': 'Registro de Sesión',
+      'session_logging_enabled': 'Habilitar Registro de Sesión',
+      'data_encryption': 'Encriptación de Datos',
+      'data_encryption_enabled': 'Habilitar Encriptación de Datos',
+      'audit_log_retention': 'Retención de Registro de Auditoría (Días)',
+      'session_log_retention': 'Retención de Registro de Sesión (Días)',
+      'audit_trail_description': 'Rastrear todas las actividades y cambios del sistema',
+      'session_logging_description': 'Registrar inicio/cierre de sesión y actividades de sesión',
+      'data_encryption_description': 'Encriptar datos sensibles en la base de datos',
     },
     'pt': {
       // Business Information
@@ -297,6 +325,20 @@ class LanguageService extends ChangeNotifier {
       'font_small': 'Pequeno',
       'font_medium': 'Médio',
       'font_large': 'Grande',
+      
+      // Security Settings
+      'security_settings': 'Configurações de Segurança',
+      'audit_trail': 'Rastreamento de Auditoria',
+      'audit_trail_enabled': 'Habilitar Rastreamento de Auditoria',
+      'session_logging': 'Registro de Sessão',
+      'session_logging_enabled': 'Habilitar Registro de Sessão',
+      'data_encryption': 'Criptografia de Dados',
+      'data_encryption_enabled': 'Habilitar Criptografia de Dados',
+      'audit_log_retention': 'Retenção de Registro de Auditoria (Dias)',
+      'session_log_retention': 'Retenção de Registro de Sessão (Dias)',
+      'audit_trail_description': 'Rastrear todas as atividades e mudanças do sistema',
+      'session_logging_description': 'Registrar login/logout e atividades de sessão',
+      'data_encryption_description': 'Criptografar dados sensíveis no banco de dados',
     },
   };
 

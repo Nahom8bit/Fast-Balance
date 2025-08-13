@@ -53,6 +53,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _autoLogin = false;
   bool _requirePasswordForClosing = false;
 
+  // Security Settings values
+  bool _auditTrailEnabled = false;
+  bool _sessionLoggingEnabled = false;
+  bool _dataEncryptionEnabled = false;
+  int _auditLogRetentionDays = 90;
+  int _sessionLogRetentionDays = 30;
+
   bool _isLoading = true;
   bool _hasChanges = false;
 
@@ -129,6 +136,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _autoLogin = settings['autoLogin'] ?? false;
         _requirePasswordForClosing = settings['requirePasswordForClosing'] ?? false;
 
+        // Security Settings
+        _auditTrailEnabled = settings['auditTrailEnabled'] ?? false;
+        _sessionLoggingEnabled = settings['sessionLoggingEnabled'] ?? false;
+        _dataEncryptionEnabled = settings['dataEncryptionEnabled'] ?? false;
+        _auditLogRetentionDays = settings['auditLogRetentionDays'] ?? 90;
+        _sessionLogRetentionDays = settings['sessionLogRetentionDays'] ?? 30;
+
         _isLoading = false;
       });
     } catch (e) {
@@ -183,6 +197,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _settingsService.setPasswordPolicy(_selectedPasswordPolicy);
       await _settingsService.setAutoLogin(_autoLogin);
       await _settingsService.setRequirePasswordForClosing(_requirePasswordForClosing);
+
+      // Save Security Settings
+      await _settingsService.setAuditTrailEnabled(_auditTrailEnabled);
+      await _settingsService.setSessionLoggingEnabled(_sessionLoggingEnabled);
+      await _settingsService.setDataEncryptionEnabled(_dataEncryptionEnabled);
+      await _settingsService.setAuditLogRetentionDays(_auditLogRetentionDays);
+      await _settingsService.setSessionLogRetentionDays(_sessionLogRetentionDays);
 
       setState(() {
         _isLoading = false;
@@ -318,9 +339,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      const SizedBox(height: 24),
                      _buildUserManagementSection(),
                      const SizedBox(height: 24),
-                     _buildPrintSettingsSection(),
-                     const SizedBox(height: 24),
-                     _buildLanguageSettingsSection(),
+                                         _buildPrintSettingsSection(),
+                    const SizedBox(height: 24),
+                    _buildSecuritySettingsSection(),
+                    const SizedBox(height: 24),
+                    _buildLanguageSettingsSection(),
                      const SizedBox(height: 24),
                      _buildActionButtons(),
                   ],
@@ -867,6 +890,121 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSecuritySettingsSection() {
+    return _buildSection(
+      title: _languageService.getString('security_settings'),
+      icon: Icons.security,
+      children: [
+        _buildSwitchField(
+          label: _languageService.getString('audit_trail_enabled'),
+          value: _auditTrailEnabled,
+          onChanged: (value) {
+            setState(() {
+              _auditTrailEnabled = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        if (_auditTrailEnabled) ...[
+          _buildDropdownField(
+            label: _languageService.getString('audit_log_retention'),
+            value: _auditLogRetentionDays.toString(),
+            items: SettingsService.auditLogRetentionOptions.map((option) {
+              return DropdownMenuItem(
+                value: option['value'],
+                child: Text(option['label']!),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _auditLogRetentionDays = int.tryParse(value!) ?? 90;
+              });
+              _markAsChanged();
+            },
+          ),
+        ],
+        _buildSwitchField(
+          label: _languageService.getString('session_logging_enabled'),
+          value: _sessionLoggingEnabled,
+          onChanged: (value) {
+            setState(() {
+              _sessionLoggingEnabled = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        if (_sessionLoggingEnabled) ...[
+          _buildDropdownField(
+            label: _languageService.getString('session_log_retention'),
+            value: _sessionLogRetentionDays.toString(),
+            items: SettingsService.sessionLogRetentionOptions.map((option) {
+              return DropdownMenuItem(
+                value: option['value'],
+                child: Text(option['label']!),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _sessionLogRetentionDays = int.tryParse(value!) ?? 30;
+              });
+              _markAsChanged();
+            },
+          ),
+        ],
+        _buildSwitchField(
+          label: _languageService.getString('data_encryption_enabled'),
+          value: _dataEncryptionEnabled,
+          onChanged: (value) {
+            setState(() {
+              _dataEncryptionEnabled = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        // Description text for security features
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.blue[900]?.withOpacity(0.2)
+                : Colors.blue[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.blue.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _languageService.getString('audit_trail_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('session_logging_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('data_encryption_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

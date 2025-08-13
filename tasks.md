@@ -163,11 +163,11 @@
   - [x] Add paper orientation settings
 
 ### **Phase 3: Low Priority Settings (Nice to Have)**
-- [ ] **Security Settings:**
-  - [ ] Add password requirement for closing
-  - [ ] Add audit trail configuration
-  - [ ] Add session logging options
-  - [ ] Add data encryption settings
+- [x] **Security Settings:**
+  - [x] Add password requirement for closing
+  - [x] Add audit trail configuration
+  - [x] Add session logging options
+  - [x] Add data encryption settings
 - [ ] **Data Management:**
   - [ ] Add auto backup configuration
   - [ ] Add backup location settings
