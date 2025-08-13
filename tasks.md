@@ -168,11 +168,11 @@
   - [x] Add audit trail configuration
   - [x] Add session logging options
   - [x] Add data encryption settings
-- [ ] **Data Management:**
-  - [ ] Add auto backup configuration
-  - [ ] Add backup location settings
-  - [ ] Add data retention period settings
-  - [ ] Add export format preferences
+- [x] **Data Management:**
+  - [x] Add auto backup configuration
+  - [x] Add backup location settings
+  - [x] Add data retention period settings
+  - [x] Add export format preferences
 - [ ] **Business Intelligence:**
   - [ ] Add KPI display customization
   - [ ] Add chart type preferences

@@ -29,6 +29,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _reportTitleController;
   late TextEditingController _autoSaveIntervalController;
   late TextEditingController _sessionTimeoutController;
+  late TextEditingController _backupLocationController;
+  late TextEditingController _backupTimeController;
 
   // Dropdown values
   String _selectedCurrency = 'USD';
@@ -60,6 +62,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int _auditLogRetentionDays = 90;
   int _sessionLogRetentionDays = 30;
 
+  // Data Management values
+  bool _autoBackupEnabled = false;
+  String _backupLocation = 'Documents/MiniMercado/Backups';
+  String _backupFrequency = 'daily';
+  int _dataRetentionPeriod = 365;
+  String _exportFormat = 'csv';
+  String _backupTime = '02:00';
+
   bool _isLoading = true;
   bool _hasChanges = false;
 
@@ -90,6 +100,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _defaultOpeningBalanceController = TextEditingController();
     _receiptHeaderController = TextEditingController();
     _receiptFooterController = TextEditingController();
+    _backupLocationController = TextEditingController();
+    _backupTimeController = TextEditingController();
     _reportTitleController = TextEditingController();
     _autoSaveIntervalController = TextEditingController();
     _sessionTimeoutController = TextEditingController();
@@ -142,6 +154,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _dataEncryptionEnabled = settings['dataEncryptionEnabled'] ?? false;
         _auditLogRetentionDays = settings['auditLogRetentionDays'] ?? 90;
         _sessionLogRetentionDays = settings['sessionLogRetentionDays'] ?? 30;
+
+        // Data Management
+        _autoBackupEnabled = settings['autoBackupEnabled'] ?? false;
+        _backupLocation = settings['backupLocation'] ?? 'Documents/MiniMercado/Backups';
+        _backupFrequency = settings['backupFrequency'] ?? 'daily';
+        _dataRetentionPeriod = settings['dataRetentionPeriod'] ?? 365;
+        _exportFormat = settings['exportFormat'] ?? 'csv';
+        _backupTime = settings['backupTime'] ?? '02:00';
 
         _isLoading = false;
       });
@@ -198,14 +218,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await _settingsService.setAutoLogin(_autoLogin);
       await _settingsService.setRequirePasswordForClosing(_requirePasswordForClosing);
 
-      // Save Security Settings
-      await _settingsService.setAuditTrailEnabled(_auditTrailEnabled);
-      await _settingsService.setSessionLoggingEnabled(_sessionLoggingEnabled);
-      await _settingsService.setDataEncryptionEnabled(_dataEncryptionEnabled);
-      await _settingsService.setAuditLogRetentionDays(_auditLogRetentionDays);
-      await _settingsService.setSessionLogRetentionDays(_sessionLogRetentionDays);
+              // Save Security Settings
+        await _settingsService.setAuditTrailEnabled(_auditTrailEnabled);
+        await _settingsService.setSessionLoggingEnabled(_sessionLoggingEnabled);
+        await _settingsService.setDataEncryptionEnabled(_dataEncryptionEnabled);
+        await _settingsService.setAuditLogRetentionDays(_auditLogRetentionDays);
+        await _settingsService.setSessionLogRetentionDays(_sessionLogRetentionDays);
 
-      setState(() {
+        // Save Data Management Settings
+        await _settingsService.setAutoBackupEnabled(_autoBackupEnabled);
+        await _settingsService.setBackupLocation(_backupLocation);
+        await _settingsService.setBackupFrequency(_backupFrequency);
+        await _settingsService.setDataRetentionPeriod(_dataRetentionPeriod);
+        await _settingsService.setExportFormat(_exportFormat);
+        await _settingsService.setBackupTime(_backupTime);
+
+        setState(() {
         _isLoading = false;
         _hasChanges = false;
       });
@@ -341,9 +369,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                      const SizedBox(height: 24),
                                          _buildPrintSettingsSection(),
                     const SizedBox(height: 24),
-                    _buildSecuritySettingsSection(),
-                    const SizedBox(height: 24),
-                    _buildLanguageSettingsSection(),
+                                            _buildSecuritySettingsSection(),
+                        const SizedBox(height: 24),
+                        _buildDataManagementSection(),
+                        const SizedBox(height: 24),
+                        _buildLanguageSettingsSection(),
                      const SizedBox(height: 24),
                      _buildActionButtons(),
                   ],
@@ -1008,6 +1038,151 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildDataManagementSection() {
+    return _buildSection(
+      title: _languageService.getString('data_management'),
+      icon: Icons.storage,
+      children: [
+        _buildSwitchField(
+          label: _languageService.getString('auto_backup_enabled'),
+          value: _autoBackupEnabled,
+          onChanged: (value) {
+            setState(() {
+              _autoBackupEnabled = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        if (_autoBackupEnabled) ...[
+          _buildTextField(
+            label: _languageService.getString('backup_location'),
+            hint: 'Documents/MiniMercado/Backups',
+            controller: _backupLocationController,
+            onChanged: (value) {
+              setState(() {
+                _backupLocation = value;
+              });
+              _markAsChanged();
+            },
+          ),
+          _buildDropdownField(
+            label: _languageService.getString('backup_frequency'),
+            value: _backupFrequency,
+            items: SettingsService.backupFrequencyOptions.map((option) {
+              return DropdownMenuItem(
+                value: option['value'],
+                child: Text(option['label']!),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _backupFrequency = value!;
+              });
+              _markAsChanged();
+            },
+          ),
+          _buildTextField(
+            label: _languageService.getString('backup_time'),
+            hint: '02:00',
+            controller: _backupTimeController,
+            onChanged: (value) {
+              setState(() {
+                _backupTime = value;
+              });
+              _markAsChanged();
+            },
+          ),
+        ],
+        _buildDropdownField(
+          label: _languageService.getString('data_retention'),
+          value: _dataRetentionPeriod.toString(),
+          items: SettingsService.dataRetentionOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _dataRetentionPeriod = int.tryParse(value!) ?? 365;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: _languageService.getString('export_format'),
+          value: _exportFormat,
+          items: SettingsService.exportFormatOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _exportFormat = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        // Description text for data management features
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.green[900]?.withOpacity(0.2)
+                : Colors.green[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.green.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _languageService.getString('auto_backup_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('backup_location_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('backup_frequency_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('data_retention_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('export_format_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1052,6 +1227,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _reportTitleController.dispose();
     _autoSaveIntervalController.dispose();
     _sessionTimeoutController.dispose();
+    _backupLocationController.dispose();
+    _backupTimeController.dispose();
     super.dispose();
   }
 }

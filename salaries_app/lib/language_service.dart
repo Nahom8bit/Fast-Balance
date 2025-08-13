@@ -128,9 +128,24 @@ class LanguageService extends ChangeNotifier {
       'data_encryption_enabled': 'Enable Data Encryption',
       'audit_log_retention': 'Audit Log Retention (Days)',
       'session_log_retention': 'Session Log Retention (Days)',
-      'audit_trail_description': 'Track all system activities and changes',
-      'session_logging_description': 'Log user login/logout and session activities',
-      'data_encryption_description': 'Encrypt sensitive data in the database',
+              'audit_trail_description': 'Track all system activities and changes',
+        'session_logging_description': 'Log user login/logout and session activities',
+        'data_encryption_description': 'Encrypt sensitive data in the database',
+        
+        // Data Management
+        'data_management': 'Data Management',
+        'auto_backup': 'Auto Backup',
+        'auto_backup_enabled': 'Enable Auto Backup',
+        'backup_location': 'Backup Location',
+        'backup_frequency': 'Backup Frequency',
+        'backup_time': 'Backup Time',
+        'data_retention': 'Data Retention Period',
+        'export_format': 'Export Format',
+        'auto_backup_description': 'Automatically backup data to prevent loss',
+        'backup_location_description': 'Choose where to store backup files',
+        'backup_frequency_description': 'How often to create backups',
+        'data_retention_description': 'How long to keep data before automatic deletion',
+        'export_format_description': 'Default format for data exports',
     },
     'es': {
       // Business Information
@@ -235,6 +250,21 @@ class LanguageService extends ChangeNotifier {
       'audit_trail_description': 'Rastrear todas las actividades y cambios del sistema',
       'session_logging_description': 'Registrar inicio/cierre de sesión y actividades de sesión',
       'data_encryption_description': 'Encriptar datos sensibles en la base de datos',
+      
+      // Data Management
+      'data_management': 'Gestión de Datos',
+      'auto_backup': 'Respaldo Automático',
+      'auto_backup_enabled': 'Habilitar Respaldo Automático',
+      'backup_location': 'Ubicación de Respaldo',
+      'backup_frequency': 'Frecuencia de Respaldo',
+      'backup_time': 'Hora de Respaldo',
+      'data_retention': 'Período de Retención de Datos',
+      'export_format': 'Formato de Exportación',
+      'auto_backup_description': 'Respaldar automáticamente los datos para prevenir pérdidas',
+      'backup_location_description': 'Elegir dónde almacenar los archivos de respaldo',
+      'backup_frequency_description': 'Con qué frecuencia crear respaldos',
+      'data_retention_description': 'Cuánto tiempo mantener los datos antes de la eliminación automática',
+      'export_format_description': 'Formato predeterminado para exportaciones de datos',
     },
     'pt': {
       // Business Information
@@ -339,6 +369,21 @@ class LanguageService extends ChangeNotifier {
       'audit_trail_description': 'Rastrear todas as atividades e mudanças do sistema',
       'session_logging_description': 'Registrar login/logout e atividades de sessão',
       'data_encryption_description': 'Criptografar dados sensíveis no banco de dados',
+      
+      // Data Management
+      'data_management': 'Gerenciamento de Dados',
+      'auto_backup': 'Backup Automático',
+      'auto_backup_enabled': 'Habilitar Backup Automático',
+      'backup_location': 'Localização do Backup',
+      'backup_frequency': 'Frequência do Backup',
+      'backup_time': 'Horário do Backup',
+      'data_retention': 'Período de Retenção de Dados',
+      'export_format': 'Formato de Exportação',
+      'auto_backup_description': 'Fazer backup automático dos dados para prevenir perdas',
+      'backup_location_description': 'Escolher onde armazenar os arquivos de backup',
+      'backup_frequency_description': 'Com que frequência criar backups',
+      'data_retention_description': 'Por quanto tempo manter os dados antes da exclusão automática',
+      'export_format_description': 'Formato padrão para exportações de dados',
     },
   };
 

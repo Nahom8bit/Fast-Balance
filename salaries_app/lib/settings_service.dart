@@ -56,6 +56,14 @@ class SettingsService {
   static const String _auditLogRetentionDaysKey = 'audit_log_retention_days';
   static const String _sessionLogRetentionDaysKey = 'session_log_retention_days';
 
+  // Data Management Settings
+  static const String _autoBackupEnabledKey = 'auto_backup_enabled';
+  static const String _backupLocationKey = 'backup_location';
+  static const String _backupFrequencyKey = 'backup_frequency';
+  static const String _dataRetentionPeriodKey = 'data_retention_period';
+  static const String _exportFormatKey = 'export_format';
+  static const String _backupTimeKey = 'backup_time';
+
   // Default values
   static const String _defaultBusinessName = 'Mini Mercado';
   static const String _defaultCurrencyCode = 'USD';
@@ -93,6 +101,14 @@ class SettingsService {
   static const bool _defaultDataEncryptionEnabled = false;
   static const int _defaultAuditLogRetentionDays = 90;
   static const int _defaultSessionLogRetentionDays = 30;
+
+  // Data Management Defaults
+  static const bool _defaultAutoBackupEnabled = false;
+  static const String _defaultBackupLocation = 'Documents/MiniMercado/Backups';
+  static const String _defaultBackupFrequency = 'daily';
+  static const int _defaultDataRetentionPeriod = 365;
+  static const String _defaultExportFormat = 'csv';
+  static const String _defaultBackupTime = '02:00';
 
   // Business Information
   Future<String> getBusinessName() async {
@@ -476,6 +492,67 @@ class SettingsService {
     await prefs.setInt(_sessionLogRetentionDaysKey, days);
   }
 
+  // Data Management Settings
+  Future<bool> getAutoBackupEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoBackupEnabledKey) ?? _defaultAutoBackupEnabled;
+  }
+
+  Future<void> setAutoBackupEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoBackupEnabledKey, enabled);
+  }
+
+  Future<String> getBackupLocation() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_backupLocationKey) ?? _defaultBackupLocation;
+  }
+
+  Future<void> setBackupLocation(String location) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_backupLocationKey, location);
+  }
+
+  Future<String> getBackupFrequency() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_backupFrequencyKey) ?? _defaultBackupFrequency;
+  }
+
+  Future<void> setBackupFrequency(String frequency) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_backupFrequencyKey, frequency);
+  }
+
+  Future<int> getDataRetentionPeriod() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_dataRetentionPeriodKey) ?? _defaultDataRetentionPeriod;
+  }
+
+  Future<void> setDataRetentionPeriod(int days) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_dataRetentionPeriodKey, days);
+  }
+
+  Future<String> getExportFormat() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_exportFormatKey) ?? _defaultExportFormat;
+  }
+
+  Future<void> setExportFormat(String format) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_exportFormatKey, format);
+  }
+
+  Future<String> getBackupTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_backupTimeKey) ?? _defaultBackupTime;
+  }
+
+  Future<void> setBackupTime(String time) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_backupTimeKey, time);
+  }
+
   // Utility methods
   Future<Map<String, dynamic>> getAllSettings() async {
     return {
@@ -507,12 +584,18 @@ class SettingsService {
       'printPreview': await getPrintPreview(),
       'printCopies': await getPrintCopies(),
       'paperOrientation': await getPaperOrientation(),
-      'auditTrailEnabled': await getAuditTrailEnabled(),
-      'sessionLoggingEnabled': await getSessionLoggingEnabled(),
-      'dataEncryptionEnabled': await getDataEncryptionEnabled(),
-      'auditLogRetentionDays': await getAuditLogRetentionDays(),
-      'sessionLogRetentionDays': await getSessionLogRetentionDays(),
-    };
+              'auditTrailEnabled': await getAuditTrailEnabled(),
+        'sessionLoggingEnabled': await getSessionLoggingEnabled(),
+        'dataEncryptionEnabled': await getDataEncryptionEnabled(),
+        'auditLogRetentionDays': await getAuditLogRetentionDays(),
+        'sessionLogRetentionDays': await getSessionLogRetentionDays(),
+        'autoBackupEnabled': await getAutoBackupEnabled(),
+        'backupLocation': await getBackupLocation(),
+        'backupFrequency': await getBackupFrequency(),
+        'dataRetentionPeriod': await getDataRetentionPeriod(),
+        'exportFormat': await getExportFormat(),
+        'backupTime': await getBackupTime(),
+      };
   }
 
   Future<void> resetToDefaults() async {
@@ -620,5 +703,28 @@ class SettingsService {
     {'value': '30', 'label': '30 Days'},
     {'value': '60', 'label': '60 Days'},
     {'value': '90', 'label': '90 Days'},
+  ];
+
+  // Data Management options
+  static const List<Map<String, String>> backupFrequencyOptions = [
+    {'value': 'daily', 'label': 'Daily'},
+    {'value': 'weekly', 'label': 'Weekly'},
+    {'value': 'monthly', 'label': 'Monthly'},
+  ];
+
+  static const List<Map<String, String>> dataRetentionOptions = [
+    {'value': '30', 'label': '30 Days'},
+    {'value': '90', 'label': '90 Days'},
+    {'value': '180', 'label': '180 Days'},
+    {'value': '365', 'label': '1 Year'},
+    {'value': '730', 'label': '2 Years'},
+    {'value': '1095', 'label': '3 Years'},
+  ];
+
+  static const List<Map<String, String>> exportFormatOptions = [
+    {'value': 'csv', 'label': 'CSV'},
+    {'value': 'excel', 'label': 'Excel'},
+    {'value': 'pdf', 'label': 'PDF'},
+    {'value': 'json', 'label': 'JSON'},
   ];
 }
