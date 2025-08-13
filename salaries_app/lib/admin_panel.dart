@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:balancer/record_detail_screen.dart';
 import 'package:balancer/dashboard_screen.dart';
 import 'package:balancer/user_management_screen.dart';
+import 'package:balancer/widgets/ui_demo_screen.dart';
 import 'database_helper.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
@@ -105,6 +106,15 @@ class AdminPanelState extends State<AdminPanel> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const UserManagementScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.palette),
+            tooltip: 'UI Demo',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const UIDemoScreen()),
               );
             },
           ),

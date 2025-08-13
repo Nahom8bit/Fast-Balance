@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../currency_formatter.dart';
+import 'enhanced_loading.dart';
 
 /// Optimized KPI Card widget with const constructor for better performance
 class KPICard extends StatelessWidget {
@@ -58,7 +59,7 @@ class KPICard extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               fontWeight: FontWeight.w600,
               fontSize: 11,
             ),
@@ -111,59 +112,7 @@ class KPICardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Container(
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Container(
-              height: 24,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 10,
-              width: 80,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return EnhancedLoading.skeletonKPICard();
   }
 }
 

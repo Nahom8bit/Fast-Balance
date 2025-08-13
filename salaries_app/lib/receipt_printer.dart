@@ -18,7 +18,7 @@ class ReceiptPrinter {
     }
 
     // Get settings for customization
-    final businessName = await settingsService.getBusinessName();
+    // final businessName = await settingsService.getBusinessName();
     final businessAddress = await settingsService.getBusinessAddress();
     final businessPhone = await settingsService.getBusinessPhone();
     final businessEmail = await settingsService.getBusinessEmail();
@@ -27,8 +27,8 @@ class ReceiptPrinter {
     final receiptHeader = await settingsService.getReceiptHeader();
     final receiptFooter = await settingsService.getReceiptFooter();
     final reportTitle = await settingsService.getReportTitle();
-    final currencySymbol = await settingsService.getCurrencySymbol();
-    final decimalPlaces = await settingsService.getDecimalPlaces();
+    // final currencySymbol = await settingsService.getCurrencySymbol();
+    // final decimalPlaces = await settingsService.getDecimalPlaces();
 
     // Standard POS receipt size (80mm width)
     // Height can be adjusted based on content, using a fixed large value here

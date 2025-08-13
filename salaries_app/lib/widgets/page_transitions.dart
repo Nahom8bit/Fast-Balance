@@ -87,7 +87,6 @@ class _AnimatedContainerState extends State<AnimatedContainer>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isHovered = false;
 
   @override
   void initState() {
@@ -137,9 +136,7 @@ class _AnimatedContainerState extends State<AnimatedContainer>
 
   void _onHover(bool isHovered) {
     if (mounted) {
-      setState(() {
-        _isHovered = isHovered;
-      });
+      setState(() {});
       if (isHovered) {
         _controller.forward();
       } else {
@@ -202,7 +199,7 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
               end: Alignment(_animation.value, 0),
               colors: [
                 Colors.transparent,
-                widget.shimmerColor ?? Colors.white.withOpacity(0.3),
+                widget.shimmerColor ?? Colors.white.withValues(alpha: 0.3),
                 Colors.transparent,
               ],
               stops: const [0.0, 0.5, 1.0],

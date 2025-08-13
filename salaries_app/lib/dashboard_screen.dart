@@ -280,7 +280,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   child: Text(
                     title,
                     style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
@@ -417,7 +417,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                               DateFormat('MMM d').format(date),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                               ),
                             );
                           }
@@ -435,7 +435,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                              'Kz${value.toInt()}',
                              style: TextStyle(
                                fontSize: 12,
-                               color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                               color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                              ),
                            );
                          },
@@ -504,7 +504,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+            color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -541,7 +541,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.list, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                Icon(Icons.list, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                 const SizedBox(width: 8),
                 Text(
                   'Discrepancies by Cashier',
@@ -597,7 +597,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.grid_on, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                Icon(Icons.grid_on, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                 const SizedBox(width: 8),
                 Text(
                   'Transaction Details',
@@ -614,7 +614,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search transactions...',
-                      prefixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                      prefixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                       border: const OutlineInputBorder(),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),

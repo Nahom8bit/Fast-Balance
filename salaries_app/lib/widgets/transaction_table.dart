@@ -40,7 +40,7 @@ class TransactionTable extends StatelessWidget {
       children: [
         Icon(
           Icons.grid_on,
-          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 8),
         Text(
@@ -60,7 +60,7 @@ class TransactionTable extends StatelessWidget {
               hintText: 'Search transactions...',
               prefixIcon: Icon(
                 Icons.search,
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               ),
               border: const OutlineInputBorder(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -274,7 +274,7 @@ class TransactionTableError extends StatelessWidget {
               children: [
                 Icon(
                   Icons.grid_on,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -294,7 +294,7 @@ class TransactionTableError extends StatelessWidget {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(

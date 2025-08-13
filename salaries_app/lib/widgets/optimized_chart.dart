@@ -71,7 +71,7 @@ class OptimizedChart extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.trending_up, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+                Icon(Icons.trending_up, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -93,13 +93,13 @@ class OptimizedChart extends StatelessWidget {
                     Icon(
                       Icons.bar_chart,
                       size: 64,
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.3),
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'No data available for chart',
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
+                        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                         fontSize: 16,
                       ),
                     ),
@@ -116,7 +116,7 @@ class OptimizedChart extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.trending_up, color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7)),
+        Icon(Icons.trending_up, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
         const SizedBox(width: 8),
         Text(
           title,
@@ -224,7 +224,7 @@ class OptimizedChart extends StatelessWidget {
     return FlGridData(
       show: true,
       getDrawingHorizontalLine: (value) => FlLine(
-        color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.1) ?? Colors.grey.withOpacity(0.1),
+        color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.1) ?? Colors.grey.withValues(alpha: 0.1),
         strokeWidth: 1,
       ),
       drawVerticalLine: false,
@@ -247,7 +247,7 @@ class OptimizedChart extends StatelessWidget {
                 DateFormat('MMM d').format(date),
                 style: TextStyle(
                   fontSize: 12,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                 ),
               );
             }
@@ -265,7 +265,7 @@ class OptimizedChart extends StatelessWidget {
               'Kz${value.toInt()}',
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
               ),
             );
           },

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart';
 import 'settings_service.dart';
 import 'language_service.dart';
+// import 'widgets/responsive_layout.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,6 +16,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final LanguageService _languageService = LanguageService();
   final _formKey = GlobalKey<FormState>();
   
+  // Navigation state for side panel layout
+  int _selectedSectionIndex = 0;
+
   // Controllers for form fields
   late TextEditingController _businessNameController;
   late TextEditingController _businessAddressController;
@@ -120,7 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final settings = await _settingsService.getAllSettings();
       
-      setState(() {
+    setState(() {
         _businessNameController.text = settings['businessName'] ?? '';
         _businessAddressController.text = settings['businessAddress'] ?? '';
         _businessPhoneController.text = settings['businessPhone'] ?? '';
@@ -195,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      setState(() {
+    setState(() {
         _isLoading = true;
       });
 
@@ -260,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _settingsService.setShowTrendsEnabled(_showTrendsEnabled);
         await _settingsService.setPerformanceMetricsEnabled(_performanceMetricsEnabled);
 
-        setState(() {
+    setState(() {
         _isLoading = false;
         _hasChanges = false;
       });
@@ -283,13 +287,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
         content: Text(_languageService.getString(message)),
         backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   void _showErrorSnackBar(String message) {
@@ -339,7 +343,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: Text(_languageService.getString('settings')),
         actions: [
-                      if (_hasChanges)
+          if (_hasChanges)
               TextButton(
                 onPressed: _isLoading ? null : _saveSettings,
                 child: Text(_languageService.getString('save')),
@@ -379,36 +383,134 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildBusinessInformationSection(),
-                    const SizedBox(height: 24),
-                    _buildCurrencySettingsSection(),
-                    const SizedBox(height: 24),
-                    _buildReceiptSettingsSection(),
-                    const SizedBox(height: 24),
-                                         _buildSystemSettingsSection(),
-                     const SizedBox(height: 24),
-                     _buildUserManagementSection(),
-                     const SizedBox(height: 24),
-                                         _buildPrintSettingsSection(),
-                    const SizedBox(height: 24),
-                                            _buildSecuritySettingsSection(),
-                        const SizedBox(height: 24),
-                        _buildDataManagementSection(),
-                        const SizedBox(height: 24),
-                        _buildBusinessIntelligenceSection(),
-                        const SizedBox(height: 24),
-                        _buildLanguageSettingsSection(),
-                     const SizedBox(height: 24),
-                     _buildActionButtons(),
-                  ],
-                ),
+              child: _buildSettingsBody(),
+            ),
+    );
+  }
+
+  Widget _buildSettingsBody() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        if (width >= 1000) {
+          return _buildSidePanelLayout();
+        }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+        children: [
+              _buildResponsiveSections(),
+              const SizedBox(height: 24),
+              _buildActionButtons(),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSidePanelLayout() {
+    final sections = _getSections();
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 260,
+            child: Card(
+              elevation: 1.5,
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                itemCount: sections.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = sections[index];
+                  final isSelected = _selectedSectionIndex == index;
+                  return ListTile(
+                    leading: Icon(item.icon, color: isSelected ? Theme.of(context).colorScheme.primary : null),
+                    title: Text(item.title),
+                    selected: isSelected,
+                    onTap: () {
+                      setState(() => _selectedSectionIndex = index);
+                    },
+                  );
+                },
               ),
             ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Render only the selected section on the right
+                  sections[_selectedSectionIndex].builder(),
+                  const SizedBox(height: 24),
+                  _buildActionButtons(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<_SettingsNavItem> _getSections() {
+    return [
+      _SettingsNavItem(_languageService.getString('business_information'), Icons.business, _buildBusinessInformationSection),
+      _SettingsNavItem(_languageService.getString('currency_and_financial_settings'), Icons.attach_money, _buildCurrencySettingsSection),
+      _SettingsNavItem(_languageService.getString('receipt_report_settings'), Icons.receipt_long, _buildReceiptSettingsSection),
+      _SettingsNavItem(_languageService.getString('system_preferences'), Icons.settings, _buildSystemSettingsSection),
+      _SettingsNavItem(_languageService.getString('user_management'), Icons.person, _buildUserManagementSection),
+      _SettingsNavItem(_languageService.getString('print_settings'), Icons.print, _buildPrintSettingsSection),
+      _SettingsNavItem(_languageService.getString('security_settings'), Icons.security, _buildSecuritySettingsSection),
+      _SettingsNavItem(_languageService.getString('data_management'), Icons.storage, _buildDataManagementSection),
+      _SettingsNavItem(_languageService.getString('business_intelligence'), Icons.analytics, _buildBusinessIntelligenceSection),
+      _SettingsNavItem(_languageService.getString('language'), Icons.language, _buildLanguageSettingsSection),
+    ];
+  }
+
+  Widget _buildResponsiveSections() {
+    final sections = <Widget>[
+      _buildBusinessInformationSection(),
+      _buildCurrencySettingsSection(),
+      _buildReceiptSettingsSection(),
+      _buildSystemSettingsSection(),
+      _buildUserManagementSection(),
+      _buildPrintSettingsSection(),
+      _buildSecuritySettingsSection(),
+      _buildDataManagementSection(),
+      _buildBusinessIntelligenceSection(),
+      _buildLanguageSettingsSection(),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        int columns;
+        if (width >= 1400) {
+          columns = 3;
+        } else if (width >= 900) {
+          columns = 2;
+        } else {
+          columns = 1;
+        }
+        const spacing = 16.0;
+        final totalSpacing = spacing * (columns - 1);
+        final itemWidth = (width - totalSpacing) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: sections
+              .map((w) => SizedBox(width: itemWidth, child: w))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -475,7 +577,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         _buildDropdownField(
           label: 'Currency',
-          value: _selectedCurrency,
+              value: _selectedCurrency,
           items: SettingsService.currencyOptions.map((currency) {
             return DropdownMenuItem(
               value: currency['code'],
@@ -519,8 +621,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return DropdownMenuItem(
               value: places,
               child: Text('$places decimal places'),
-            );
-          }).toList(),
+                );
+              }).toList(),
           onChanged: (value) {
             setState(() {
               _selectedDecimalPlaces = value!;
@@ -657,7 +759,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return _buildSection(
       title: _languageService.getString('language'),
       icon: Icons.language,
-      children: [
+          children: [
         _buildDropdownField(
           label: _languageService.getString('language'),
           value: _languageService.currentLocale.languageCode,
@@ -848,8 +950,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required List<Widget> children,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return Card(
-      elevation: 2,
+      elevation: 1.5,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -857,12 +960,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, color: Theme.of(context).primaryColor),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(icon, color: cs.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 2,
+                        width: 48,
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ],
@@ -1029,11 +1155,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           margin: const EdgeInsets.only(top: 8),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.blue[900]?.withOpacity(0.2)
+                ? Colors.blue[900]?.withValues(alpha: 0.2)
                 : Colors.blue[50],
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.blue.withOpacity(0.3),
+              color: Colors.blue.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1160,11 +1286,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           margin: const EdgeInsets.only(top: 8),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.green[900]?.withOpacity(0.2)
+                ? Colors.green[900]?.withValues(alpha: 0.2)
                 : Colors.green[50],
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.green.withOpacity(0.3),
+              color: Colors.green.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1323,11 +1449,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           margin: const EdgeInsets.only(top: 8),
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.blue[900]?.withOpacity(0.2)
+                ? Colors.blue[900]?.withValues(alpha: 0.2)
                 : Colors.blue[50],
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Colors.blue.withOpacity(0.3),
+              color: Colors.blue.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1437,4 +1563,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _backupTimeController.dispose();
     super.dispose();
   }
+}
+
+class _SettingsNavItem {
+  final String title;
+  final IconData icon;
+  final Widget Function() builder;
+
+  _SettingsNavItem(this.title, this.icon, this.builder);
 }

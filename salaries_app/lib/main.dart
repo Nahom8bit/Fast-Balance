@@ -533,6 +533,7 @@ class ClosingScreenState extends State<ClosingScreen> {
               icon: const Icon(Icons.print),
               label: const Text('Print Receipt'),
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(this.context);
                 Navigator.of(context).pop();
                 try {
                   await ReceiptPrinter.printReceipt(closingData);
@@ -543,15 +544,13 @@ class ClosingScreenState extends State<ClosingScreen> {
                   // If printing fails, still clear fields and show success
                   _clearAllFields();
                   _showSuccessMessage();
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Print failed: $e'),
-                        backgroundColor: Colors.orange,
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  }
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Print failed: $e'),
+                      backgroundColor: Colors.orange,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
                 }
               },
             ),

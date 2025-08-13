@@ -159,8 +159,12 @@ class RecordsRepository {
   }
 
   /// Invalidate specific cache entries
+  // ignore: unused_element
   void _invalidateCacheByPattern(String pattern) {
     final keysToRemove = _cache.keys.where((key) => key.contains(pattern)).toList();
+    if (keysToRemove.isEmpty) {
+      return; // Keep method for future use; no-op when nothing matches
+    }
     for (final key in keysToRemove) {
       _cache.remove(key);
       _cacheTimestamps.remove(key);

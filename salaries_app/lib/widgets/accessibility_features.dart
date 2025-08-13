@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+// import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 /// Accessibility wrapper for screen reader support
@@ -74,8 +74,6 @@ class HighContrastWidget extends StatelessWidget {
         onSecondary: Colors.black,
         surface: Colors.black,
         onSurface: Colors.white,
-        background: Colors.black,
-        onBackground: Colors.white,
         error: Colors.red,
         onError: Colors.white,
       );
@@ -87,8 +85,6 @@ class HighContrastWidget extends StatelessWidget {
         onSecondary: Colors.white,
         surface: Colors.white,
         onSurface: Colors.black,
-        background: Colors.white,
-        onBackground: Colors.black,
         error: Colors.red,
         onError: Colors.white,
       );

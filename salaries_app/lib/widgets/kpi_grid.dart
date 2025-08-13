@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'kpi_card.dart';
+import 'enhanced_loading.dart';
+import 'enhanced_states.dart';
 
 /// KPI Grid widget for displaying KPI cards in a responsive grid
 class KPIGrid extends StatelessWidget {
@@ -86,7 +88,7 @@ class KPIGridLoading extends StatelessWidget {
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
       childAspectRatio: 2.5,
-      children: List.generate(4, (index) => const KPICardLoading()),
+      children: List.generate(4, (index) => EnhancedLoading.skeletonKPICard()),
     );
   }
 
@@ -117,36 +119,12 @@ class KPIGridError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load KPI data',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          if (onRetry != null) ...[
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ],
-      ),
+    return EnhancedErrorState(
+      title: 'Failed to load KPI data',
+      message: message,
+      icon: Icons.analytics_outlined,
+      onRetry: onRetry,
+      retryLabel: 'Retry',
     );
   }
 } 
