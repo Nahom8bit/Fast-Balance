@@ -59,10 +59,19 @@ class SettingsService {
   // Data Management Settings
   static const String _autoBackupEnabledKey = 'auto_backup_enabled';
   static const String _backupLocationKey = 'backup_location';
-  static const String _backupFrequencyKey = 'backup_frequency';
+  static const String _backupFrequencyKey = 'backup_backup_frequency';
   static const String _dataRetentionPeriodKey = 'data_retention_period';
   static const String _exportFormatKey = 'export_format';
   static const String _backupTimeKey = 'backup_time';
+
+  // Business Intelligence Settings
+  static const String _kpiDisplayCustomizationKey = 'kpi_display_customization';
+  static const String _chartTypePreferencesKey = 'chart_type_preferences';
+  static const String _defaultDateRangeKey = 'default_date_range';
+  static const String _alertThresholdConfigKey = 'alert_threshold_config';
+  static const String _dashboardRefreshIntervalKey = 'dashboard_refresh_interval';
+  static const String _showTrendsEnabledKey = 'show_trends_enabled';
+  static const String _performanceMetricsEnabledKey = 'performance_metrics_enabled';
 
   // Default values
   static const String _defaultBusinessName = 'Mini Mercado';
@@ -109,6 +118,15 @@ class SettingsService {
   static const int _defaultDataRetentionPeriod = 365;
   static const String _defaultExportFormat = 'csv';
   static const String _defaultBackupTime = '02:00';
+
+  // Business Intelligence Defaults
+  static const String _defaultKpiDisplayCustomization = 'all';
+  static const String _defaultChartTypePreferences = 'line';
+  static const String _defaultDateRange = '7d';
+  static const String _defaultAlertThresholdConfig = 'medium';
+  static const int _defaultDashboardRefreshInterval = 30;
+  static const bool _defaultShowTrendsEnabled = true;
+  static const bool _defaultPerformanceMetricsEnabled = true;
 
   // Business Information
   Future<String> getBusinessName() async {
@@ -553,6 +571,77 @@ class SettingsService {
     await prefs.setString(_backupTimeKey, time);
   }
 
+  // Business Intelligence Settings
+  Future<String> getKpiDisplayCustomization() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kpiDisplayCustomizationKey) ?? _defaultKpiDisplayCustomization;
+  }
+
+  Future<void> setKpiDisplayCustomization(String customization) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kpiDisplayCustomizationKey, customization);
+  }
+
+  Future<String> getChartTypePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_chartTypePreferencesKey) ?? _defaultChartTypePreferences;
+  }
+
+  Future<void> setChartTypePreferences(String chartType) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_chartTypePreferencesKey, chartType);
+  }
+
+  Future<String> getDefaultDateRange() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_defaultDateRangeKey) ?? _defaultDateRange;
+  }
+
+  Future<void> setDefaultDateRange(String dateRange) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_defaultDateRangeKey, dateRange);
+  }
+
+  Future<String> getAlertThresholdConfig() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_alertThresholdConfigKey) ?? _defaultAlertThresholdConfig;
+  }
+
+  Future<void> setAlertThresholdConfig(String threshold) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_alertThresholdConfigKey, threshold);
+  }
+
+  Future<int> getDashboardRefreshInterval() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_dashboardRefreshIntervalKey) ?? _defaultDashboardRefreshInterval;
+  }
+
+  Future<void> setDashboardRefreshInterval(int seconds) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_dashboardRefreshIntervalKey, seconds);
+  }
+
+  Future<bool> getShowTrendsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_showTrendsEnabledKey) ?? _defaultShowTrendsEnabled;
+  }
+
+  Future<void> setShowTrendsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_showTrendsEnabledKey, enabled);
+  }
+
+  Future<bool> getPerformanceMetricsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_performanceMetricsEnabledKey) ?? _defaultPerformanceMetricsEnabled;
+  }
+
+  Future<void> setPerformanceMetricsEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_performanceMetricsEnabledKey, enabled);
+  }
+
   // Utility methods
   Future<Map<String, dynamic>> getAllSettings() async {
     return {
@@ -595,6 +684,13 @@ class SettingsService {
         'dataRetentionPeriod': await getDataRetentionPeriod(),
         'exportFormat': await getExportFormat(),
         'backupTime': await getBackupTime(),
+        'kpiDisplayCustomization': await getKpiDisplayCustomization(),
+        'chartTypePreferences': await getChartTypePreferences(),
+        'defaultDateRange': await getDefaultDateRange(),
+        'alertThresholdConfig': await getAlertThresholdConfig(),
+        'dashboardRefreshInterval': await getDashboardRefreshInterval(),
+        'showTrendsEnabled': await getShowTrendsEnabled(),
+        'performanceMetricsEnabled': await getPerformanceMetricsEnabled(),
       };
   }
 
@@ -726,5 +822,46 @@ class SettingsService {
     {'value': 'excel', 'label': 'Excel'},
     {'value': 'pdf', 'label': 'PDF'},
     {'value': 'json', 'label': 'JSON'},
+  ];
+
+  // Business Intelligence options
+  static const List<Map<String, String>> kpiDisplayOptions = [
+    {'value': 'all', 'label': 'All KPIs'},
+    {'value': 'sales', 'label': 'Sales Only'},
+    {'value': 'expenses', 'label': 'Expenses Only'},
+    {'value': 'profit', 'label': 'Profit Only'},
+    {'value': 'custom', 'label': 'Custom Selection'},
+  ];
+
+  static const List<Map<String, String>> chartTypeOptions = [
+    {'value': 'line', 'label': 'Line Chart'},
+    {'value': 'bar', 'label': 'Bar Chart'},
+    {'value': 'pie', 'label': 'Pie Chart'},
+    {'value': 'area', 'label': 'Area Chart'},
+    {'value': 'column', 'label': 'Column Chart'},
+  ];
+
+  static const List<Map<String, String>> dateRangeOptions = [
+    {'value': '1d', 'label': 'Today'},
+    {'value': '7d', 'label': 'Last 7 Days'},
+    {'value': '30d', 'label': 'Last 30 Days'},
+    {'value': '90d', 'label': 'Last 90 Days'},
+    {'value': '1y', 'label': 'Last Year'},
+    {'value': 'custom', 'label': 'Custom Range'},
+  ];
+
+  static const List<Map<String, String>> alertThresholdOptions = [
+    {'value': 'low', 'label': 'Low Sensitivity'},
+    {'value': 'medium', 'label': 'Medium Sensitivity'},
+    {'value': 'high', 'label': 'High Sensitivity'},
+    {'value': 'custom', 'label': 'Custom Thresholds'},
+  ];
+
+  static const List<Map<String, String>> refreshIntervalOptions = [
+    {'value': '15', 'label': '15 Seconds'},
+    {'value': '30', 'label': '30 Seconds'},
+    {'value': '60', 'label': '1 Minute'},
+    {'value': '300', 'label': '5 Minutes'},
+    {'value': '600', 'label': '10 Minutes'},
   ];
 }

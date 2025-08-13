@@ -70,6 +70,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _exportFormat = 'csv';
   String _backupTime = '02:00';
 
+  // Business Intelligence values
+  String _kpiDisplayCustomization = 'all';
+  String _chartTypePreferences = 'line';
+  String _defaultDateRange = '7d';
+  String _alertThresholdConfig = 'medium';
+  int _dashboardRefreshInterval = 30;
+  bool _showTrendsEnabled = true;
+  bool _performanceMetricsEnabled = true;
+
   bool _isLoading = true;
   bool _hasChanges = false;
 
@@ -163,6 +172,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _exportFormat = settings['exportFormat'] ?? 'csv';
         _backupTime = settings['backupTime'] ?? '02:00';
 
+        // Business Intelligence
+        _kpiDisplayCustomization = settings['kpiDisplayCustomization'] ?? 'all';
+        _chartTypePreferences = settings['chartTypePreferences'] ?? 'line';
+        _defaultDateRange = settings['defaultDateRange'] ?? '7d';
+        _alertThresholdConfig = settings['alertThresholdConfig'] ?? 'medium';
+        _dashboardRefreshInterval = settings['dashboardRefreshInterval'] ?? 30;
+        _showTrendsEnabled = settings['showTrendsEnabled'] ?? true;
+        _performanceMetricsEnabled = settings['performanceMetricsEnabled'] ?? true;
+
         _isLoading = false;
       });
     } catch (e) {
@@ -232,6 +250,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await _settingsService.setDataRetentionPeriod(_dataRetentionPeriod);
         await _settingsService.setExportFormat(_exportFormat);
         await _settingsService.setBackupTime(_backupTime);
+
+        // Save Business Intelligence Settings
+        await _settingsService.setKpiDisplayCustomization(_kpiDisplayCustomization);
+        await _settingsService.setChartTypePreferences(_chartTypePreferences);
+        await _settingsService.setDefaultDateRange(_defaultDateRange);
+        await _settingsService.setAlertThresholdConfig(_alertThresholdConfig);
+        await _settingsService.setDashboardRefreshInterval(_dashboardRefreshInterval);
+        await _settingsService.setShowTrendsEnabled(_showTrendsEnabled);
+        await _settingsService.setPerformanceMetricsEnabled(_performanceMetricsEnabled);
 
         setState(() {
         _isLoading = false;
@@ -372,6 +399,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             _buildSecuritySettingsSection(),
                         const SizedBox(height: 24),
                         _buildDataManagementSection(),
+                        const SizedBox(height: 24),
+                        _buildBusinessIntelligenceSection(),
                         const SizedBox(height: 24),
                         _buildLanguageSettingsSection(),
                      const SizedBox(height: 24),
@@ -1174,6 +1203,183 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _languageService.getString('export_format_description'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Colors.green[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBusinessIntelligenceSection() {
+    return _buildSection(
+      title: _languageService.getString('business_intelligence'),
+      icon: Icons.analytics,
+      children: [
+        _buildDropdownField(
+          label: _languageService.getString('kpi_display_customization'),
+          value: _kpiDisplayCustomization,
+          items: SettingsService.kpiDisplayOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _kpiDisplayCustomization = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: _languageService.getString('chart_type_preferences'),
+          value: _chartTypePreferences,
+          items: SettingsService.chartTypeOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _chartTypePreferences = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: _languageService.getString('default_date_range'),
+          value: _defaultDateRange,
+          items: SettingsService.dateRangeOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _defaultDateRange = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: _languageService.getString('alert_threshold_config'),
+          value: _alertThresholdConfig,
+          items: SettingsService.alertThresholdOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _alertThresholdConfig = value!;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildDropdownField(
+          label: _languageService.getString('dashboard_refresh_interval'),
+          value: _dashboardRefreshInterval.toString(),
+          items: SettingsService.refreshIntervalOptions.map((option) {
+            return DropdownMenuItem(
+              value: option['value'],
+              child: Text(option['label']!),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _dashboardRefreshInterval = int.tryParse(value!) ?? 30;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildSwitchField(
+          label: _languageService.getString('show_trends_enabled'),
+          value: _showTrendsEnabled,
+          onChanged: (value) {
+            setState(() {
+              _showTrendsEnabled = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        _buildSwitchField(
+          label: _languageService.getString('performance_metrics_enabled'),
+          value: _performanceMetricsEnabled,
+          onChanged: (value) {
+            setState(() {
+              _performanceMetricsEnabled = value;
+            });
+            _markAsChanged();
+          },
+        ),
+        // Description text for business intelligence features
+        Container(
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.blue[900]?.withOpacity(0.2)
+                : Colors.blue[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.blue.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _languageService.getString('kpi_display_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('chart_type_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('date_range_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('alert_threshold_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('refresh_interval_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('trends_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _languageService.getString('performance_metrics_description'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.blue[700],
                 ),
               ),
             ],
