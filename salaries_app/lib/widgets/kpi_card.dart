@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../currency_formatter.dart';
-import 'enhanced_loading.dart';
+import 'loading_states.dart';
 
 /// Optimized KPI Card widget with const constructor for better performance
 class KPICard extends StatelessWidget {
@@ -29,21 +29,34 @@ class KPICard extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 8),
-              _buildValue(context),
-              const SizedBox(height: 4),
-              _buildChangeIndicator(context, changeColor, isPositive),
-            ],
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.05),
+                color.withValues(alpha: 0.02),
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 12),
+                _buildValue(context),
+                const SizedBox(height: 8),
+                _buildChangeIndicator(context, changeColor, isPositive),
+              ],
+            ),
           ),
         ),
       ),
@@ -71,12 +84,16 @@ class KPICard extends StatelessWidget {
   }
 
   Widget _buildValue(BuildContext context) {
-    return Text(
-      CurrencyFormatter.format(value),
-      style: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).textTheme.titleLarge?.color,
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        CurrencyFormatter.format(value),
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).textTheme.titleLarge?.color,
+          letterSpacing: -0.5,
+        ),
       ),
     );
   }
@@ -112,7 +129,7 @@ class KPICardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EnhancedLoading.skeletonKPICard();
+    return LoadingStates.skeletonKPICard();
   }
 }
 

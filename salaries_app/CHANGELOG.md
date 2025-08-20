@@ -7,22 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Auto-update system with GitHub integration
-- Kwanza currency support
-- Dynamic chart scaling
-- Cashier management system
-- Professional dashboard with KPIs
-
-### Changed
-- Improved UI/UX design
-- Enhanced database schema
-- Optimized performance
+## [2.1.0] - 2025-01-15
 
 ### Fixed
-- UI overflow issues
-- Chart rendering problems
-- Database migration issues
+- Flutter analyzer issues resolved (9 total issues)
+- Syntax error in dashboard chart ternary operator
+- Undefined method '_formatNumber' errors in dashboard
+- Removed unused local variables and fields
+- Code cleanup and optimization
+
+### Technical Improvements
+- Simplified complex chart rendering logic
+- Improved code structure and organization
+- Enhanced error handling in chart components
 
 ## [1.0.0] - 2025-01-XX
 

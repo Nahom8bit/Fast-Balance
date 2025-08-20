@@ -1,6 +1,6 @@
 [Setup]
 AppName=Mini Mercado - Balance Closing System
-AppVersion=1.0.0
+AppVersion=2.1.0
 AppPublisher=Mini Mercado
 AppPublisherURL=https://minimercado.com
 AppSupportURL=https://minimercado.com/support

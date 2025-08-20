@@ -127,9 +127,10 @@ class DatabaseHelper {
 
   Future<int> insertRecordWithExpenses(Map<String, dynamic> record, List<Map<String, dynamic>> expenses) async {
     Database db = await instance.database;
+    late int recordId;
     await db.transaction((txn) async {
       // Insert the main record
-      int recordId = await txn.insert(tableRecords, record);
+      recordId = await txn.insert(tableRecords, record);
       
       // Insert all expenses for this record
       for (var expense in expenses) {
@@ -137,7 +138,7 @@ class DatabaseHelper {
         await txn.insert(tableExpenses, expense);
       }
     });
-    return 1; // Return success
+    return recordId; // Return the actual record ID
   }
 
   Future<List<Map<String, dynamic>>> queryAllRecords() async {

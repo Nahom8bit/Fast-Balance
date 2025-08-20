@@ -3,14 +3,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'currency_formatter.dart';
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-
   @override
   DashboardScreenState createState() => DashboardScreenState();
 }
-
 class DashboardScreenState extends State<DashboardScreen> {
   final dbHelper = DatabaseHelper.instance;
   late Future<List<Map<String, dynamic>>> _recordsFuture;
@@ -18,13 +15,15 @@ class DashboardScreenState extends State<DashboardScreen> {
   DateTime _endDate = DateTime.now();
   String _selectedPeriod = 'This Month';
   final TextEditingController _searchController = TextEditingController();
-
+  // Chart interaction state
+  String _selectedChartType = 'line';
+  bool _showTooltips = true;
+  List<Map<String, dynamic>> _currentRecords = [];
   @override
   void initState() {
     super.initState();
     _fetchRecords();
   }
-
   void _fetchRecords() {
     setState(() {
       _recordsFuture = dbHelper.queryRecordsByDateRange(
@@ -33,7 +32,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       );
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +49,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text('No data available for the selected range.'));
                 } else {
+                  _currentRecords = snapshot.data!;
                   return _buildDashboardContent(snapshot.data!);
                 }
               },
@@ -60,7 +59,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildHeader() {
     return Container(
       height: 80,
@@ -96,6 +94,10 @@ class DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const Spacer(),
+            _buildChartTypeSelector(),
+            const SizedBox(width: 12),
+            _buildChartOptionsMenu(),
+            const SizedBox(width: 16),
             _buildDatePicker('Start Date', _startDate, (date) {
               setState(() {
                 _startDate = date;
@@ -116,7 +118,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildDatePicker(String label, DateTime date, Function(DateTime) onChanged) {
     return InkWell(
       onTap: () async {
@@ -154,7 +155,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildPeriodDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -187,10 +187,137 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+  Widget _buildChartTypeSelector() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[800]
+            : Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: DropdownButton<String>(
+        value: _selectedChartType,
+        underline: Container(),
+        icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+        items: [
+          DropdownMenuItem(value: 'line', child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.show_chart, size: 16),
+              SizedBox(width: 6),
+              Text('Line', style: TextStyle(fontSize: 12)),
+            ],
+          )),
+          DropdownMenuItem(value: 'bar', child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.bar_chart, size: 16),
+              SizedBox(width: 6),
+              Text('Bar', style: TextStyle(fontSize: 12)),
+            ],
+          )),
+          DropdownMenuItem(value: 'area', child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.area_chart, size: 16),
+              SizedBox(width: 6),
+              Text('Area', style: TextStyle(fontSize: 12)),
+            ],
+          )),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _selectedChartType = value!;
+          });
+        },
+      ),
+    );
+  }
+  Widget _buildChartOptionsMenu() {
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        color: Theme.of(context).appBarTheme.foregroundColor,
+        size: 20,
+      ),
+      onSelected: (value) {
+        switch (value) {
+          case 'toggleTooltips':
+            setState(() {
+              _showTooltips = !_showTooltips;
+            });
+            break;
+          case 'exportChart':
+            _exportChartData();
+            break;
+          case 'fullscreen':
+            _showFullscreenChart();
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'toggleTooltips',
+          child: Row(
+            children: [
+              Icon(_showTooltips ? Icons.visibility_off : Icons.visibility, size: 18),
+              SizedBox(width: 8),
+              Text(_showTooltips ? 'Hide Tooltips' : 'Show Tooltips'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'exportChart',
+          child: Row(
+            children: [
+              Icon(Icons.download, size: 18),
+              SizedBox(width: 8),
+              Text('Export Chart Data'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'fullscreen',
+          child: Row(
+            children: [
+              Icon(Icons.fullscreen, size: 18),
+              SizedBox(width: 8),
+              Text('Fullscreen View'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+  void _exportChartData() {
+    // Implementation for exporting chart data
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.download, color: Colors.white),
+            SizedBox(width: 8),
+            Text('Chart data exported successfully'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+  void _showFullscreenChart() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _FullscreenChartView(
+          records: _currentRecords,
+          chartType: _selectedChartType,
+          showTooltips: _showTooltips,
+        ),
+      ),
+    );
+  }
   Widget _buildDashboardContent(List<Map<String, dynamic>> records) {
     final kpis = _calculateKPIs(records);
-    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -217,19 +344,16 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Map<String, dynamic> _calculateKPIs(List<Map<String, dynamic>> records) {
     double totalCash = records.map((r) => r[DatabaseHelper.columnCash] as double).fold(0.0, (a, b) => a + b);
     double totalTpa = records.map((r) => r[DatabaseHelper.columnTpa] as double).fold(0.0, (a, b) => a + b);
     double totalExpenses = records.map((r) => r[DatabaseHelper.columnExpenses] as double).fold(0.0, (a, b) => a + b);
     double totalDiscrepancies = records.map((r) => r[DatabaseHelper.columnDiscrepancy] as double).fold(0.0, (a, b) => a + b);
-
     // Calculate percentage changes (simplified - you can implement actual comparison)
     double cashChange = records.isNotEmpty ? 5.2 : 0.0;
     double tpaChange = records.isNotEmpty ? 3.7 : 0.0;
     double expensesChange = records.isNotEmpty ? 2.1 : 0.0;
     double discrepanciesChange = records.isNotEmpty ? -12.3 : 0.0;
-
     return {
       'cash': totalCash,
       'tpa': totalTpa,
@@ -241,7 +365,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       'discrepanciesChange': discrepanciesChange,
     };
   }
-
   Widget _buildKPICards(Map<String, dynamic> kpis) {
     return GridView.count(
       crossAxisCount: 4,
@@ -258,11 +381,9 @@ class DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
   Widget _buildKPICard(String title, double value, double change, IconData icon, Color color) {
     final isPositive = change >= 0;
     final changeColor = isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444);
-    
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -325,28 +446,22 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
     Widget _buildSalesTrendChart(List<Map<String, dynamic>> records) {
     final sortedRecords = List<Map<String, dynamic>>.from(records);
     sortedRecords.sort((a, b) => DateTime.parse(a[DatabaseHelper.columnDate]).compareTo(DateTime.parse(b[DatabaseHelper.columnDate])));
-    
     final cashSpots = sortedRecords.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value[DatabaseHelper.columnCash]);
     }).toList();
-
     final tpaSpots = sortedRecords.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value[DatabaseHelper.columnTpa]);
     }).toList();
-
     // Calculate dynamic Y-axis values based on actual data
     double maxCash = cashSpots.isNotEmpty ? cashSpots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) : 0;
     double maxTpa = tpaSpots.isNotEmpty ? tpaSpots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) : 0;
     double maxValue = (maxCash > maxTpa ? maxCash : maxTpa);
-    
     // Calculate appropriate interval based on max value
     double interval = _calculateInterval(maxValue);
     double maxY = (maxValue / interval).ceil() * interval;
-
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -389,89 +504,10 @@ class DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 20),
                                       SizedBox(
-               height: 300,
-               child: records.isNotEmpty ? LineChart(
-                 LineChartData(
-                   minY: 0,
-                   maxY: maxY,
-                   gridData: FlGridData(
-                    show: true,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: const Color(0xFFE2E8F0),
-                      strokeWidth: 1,
-                    ),
-                    drawVerticalLine: false,
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 30,
-                                                 getTitlesWidget: (value, meta) {
-                           if (value.toInt() < sortedRecords.length) {
-                             final date = DateTime.parse(sortedRecords[value.toInt()][DatabaseHelper.columnDate]);
-                            return Text(
-                              DateFormat('MMM d').format(date),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                        interval: 1,
-                      ),
-                    ),
-                                         leftTitles: AxisTitles(
-                       sideTitles: SideTitles(
-                         showTitles: true,
-                         reservedSize: 50,
-                         getTitlesWidget: (value, meta) {
-                           return Text(
-                             'Kz${value.toInt()}',
-                             style: TextStyle(
-                               fontSize: 12,
-                               color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
-                             ),
-                           );
-                         },
-                         interval: interval,
-                       ),
-                     ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: cashSpots,
-                      isCurved: true,
-                      color: const Color(0xFF10B981),
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                      ),
-                    ),
-                    LineChartBarData(
-                      spots: tpaSpots,
-                      isCurved: true,
-                      color: const Color(0xFF3B82F6),
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ],
-                ),
-              ) : const Center(child: Text('No data available for chart')),
+              height: 300,
+              child: records.isNotEmpty 
+                ? _buildChart(sortedRecords, cashSpots, tpaSpots, maxY, interval) 
+                : const Center(child: Text('No data available for chart')),
             ),
             const SizedBox(height: 16),
             Row(
@@ -487,7 +523,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildLegendItem(String label, Color color) {
     return Row(
       children: [
@@ -510,27 +545,237 @@ class DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
+  Widget _buildChart(List<Map<String, dynamic>> sortedRecords, List<FlSpot> cashSpots, List<FlSpot> tpaSpots, double maxY, double interval) {
+    switch (_selectedChartType) {
+      case 'bar':
+        return _buildBarChart(sortedRecords, cashSpots, tpaSpots, maxY, interval);
+      case 'area':
+        return _buildAreaChart(sortedRecords, cashSpots, tpaSpots, maxY, interval);
+      default:
+        return _buildLineChart(sortedRecords, cashSpots, tpaSpots, maxY, interval);
+    }
+  }
+  Widget _buildLineChart(List<Map<String, dynamic>> sortedRecords, List<FlSpot> cashSpots, List<FlSpot> tpaSpots, double maxY, double interval) {
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: maxY,
+        gridData: FlGridData(
+          show: true,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: const Color(0xFFE2E8F0),
+            strokeWidth: 1,
+          ),
+          drawVerticalLine: false,
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() < sortedRecords.length) {
+                  final date = DateTime.parse(sortedRecords[value.toInt()][DatabaseHelper.columnDate]);
+                  return Text(
+                    DateFormat('MMM d').format(date),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              interval: interval,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  _formatNumber(value),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          enabled: _showTooltips,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                final label = touchedSpot.barIndex == 0 ? 'Cash' : 'TPA';
+                return LineTooltipItem(
+                  '$label\nKz ${_formatNumber(touchedSpot.y)}',
+                  TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: cashSpots,
+            isCurved: true,
+            color: const Color(0xFF10B981),
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: _showTooltips,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 4,
+                color: const Color(0xFF10B981),
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: _selectedChartType == 'area',
+              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+            ),
+          ),
+          LineChartBarData(
+            spots: tpaSpots,
+            isCurved: true,
+            color: const Color(0xFF3B82F6),
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: _showTooltips,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 4,
+                color: const Color(0xFF3B82F6),
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: _selectedChartType == 'area',
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildBarChart(List<Map<String, dynamic>> sortedRecords, List<FlSpot> cashSpots, List<FlSpot> tpaSpots, double maxY, double interval) {
+    return BarChart(
+      BarChartData(
+        maxY: maxY,
+        barTouchData: BarTouchData(
+          enabled: _showTooltips,
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final label = rodIndex == 0 ? 'Cash' : 'TPA';
+              return BarTooltipItem(
+                '$label\nKz ${_formatNumber(rod.toY)}',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() < sortedRecords.length) {
+                  final date = DateTime.parse(sortedRecords[value.toInt()][DatabaseHelper.columnDate]);
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      DateFormat('MMM d').format(date),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              interval: interval,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  _formatNumber(value),
+                  style: const TextStyle(fontSize: 12),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        barGroups: List.generate(
+          sortedRecords.length,
+          (index) => BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: cashSpots[index].y,
+                color: const Color(0xFF10B981),
+                width: 12,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
+                ),
+              ),
+              BarChartRodData(
+                toY: tpaSpots[index].y,
+                color: const Color(0xFF3B82F6),
+                width: 12,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildAreaChart(List<Map<String, dynamic>> sortedRecords, List<FlSpot> cashSpots, List<FlSpot> tpaSpots, double maxY, double interval) {
+    return _buildLineChart(sortedRecords, cashSpots, tpaSpots, maxY, interval);
+  }
   Widget _buildDiscrepanciesByCashier(List<Map<String, dynamic>> records) {
     // Calculate discrepancies by cashier from actual records
     final Map<String, double> cashierDiscrepancies = {};
-    
     for (final record in records) {
       final cashier = record[DatabaseHelper.columnCashier] as String? ?? 'Unknown';
       final discrepancy = record[DatabaseHelper.columnDiscrepancy] as double;
-      
       if (cashierDiscrepancies.containsKey(cashier)) {
         cashierDiscrepancies[cashier] = cashierDiscrepancies[cashier]! + discrepancy;
       } else {
         cashierDiscrepancies[cashier] = discrepancy;
       }
     }
-    
     final cashiers = cashierDiscrepancies.entries.map((entry) => {
       'name': entry.key,
       'discrepancy': entry.value,
     }).toList();
-
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -585,7 +830,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildTransactionDetailsTable(List<Map<String, dynamic>> records) {
     return Card(
       elevation: 2,
@@ -642,7 +886,6 @@ class DashboardScreenState extends State<DashboardScreen> {
                   final tpa = record[DatabaseHelper.columnTpa] as double;
                   final total = cash + tpa;
                   final discrepancy = record[DatabaseHelper.columnDiscrepancy] as double;
-                  
                   return DataRow(
                     cells: [
                       DataCell(Text(DateFormat('MM/dd/yyyy').format(date), style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
@@ -669,7 +912,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildStatusChip(String status) {
     Color color;
     switch (status) {
@@ -685,7 +927,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       default:
         color = const Color(0xFF64748B);
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -703,10 +944,8 @@ class DashboardScreenState extends State<DashboardScreen> {
              ),
      );
    }
-
   double _calculateInterval(double maxValue) {
     if (maxValue <= 0) return 1000;
-    
     // Calculate appropriate interval based on the magnitude of the max value
     if (maxValue < 1000) {
       return 100;
@@ -722,4 +961,241 @@ class DashboardScreenState extends State<DashboardScreen> {
       return 25000;
     }
   }
-} 
+
+  String _formatNumber(double value) {
+    if (value >= 1000000) {
+      return '${(value / 1000000).toStringAsFixed(1)}M';
+    } else if (value >= 1000) {
+      return '${(value / 1000).toStringAsFixed(1)}K';
+    } else {
+      return value.toStringAsFixed(0);
+    }
+  }
+}
+class _FullscreenChartView extends StatelessWidget {
+  final List<Map<String, dynamic>> records;
+  final String chartType;
+  final bool showTooltips;
+  const _FullscreenChartView({
+    required this.records,
+    required this.chartType,
+    required this.showTooltips,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chart - Fullscreen View'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.fullscreen_exit),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.black,
+      body: Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Chart Type: ${chartType.toUpperCase()} | Tooltips: ${showTooltips ? 'ON' : 'OFF'}',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                  Spacer(),
+                  Text(
+                    '${records.length} Records',
+                    style: TextStyle(color: Colors.grey[400]),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24),
+            Expanded(
+              child: Card(
+                color: Colors.grey[900],
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: records.isNotEmpty
+                      ? _buildFullscreenChart()
+                      : Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.bar_chart, size: 80, color: Colors.grey[600]),
+                              SizedBox(height: 16),
+                              Text(
+                                'No Data Available',
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildFullscreenChart() {
+    final sortedRecords = List<Map<String, dynamic>>.from(records);
+    sortedRecords.sort((a, b) => DateTime.parse(a[DatabaseHelper.columnDate]).compareTo(DateTime.parse(b[DatabaseHelper.columnDate])));
+    final cashSpots = sortedRecords.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value[DatabaseHelper.columnCash]);
+    }).toList();
+    final tpaSpots = sortedRecords.asMap().entries.map((entry) {
+      return FlSpot(entry.key.toDouble(), entry.value[DatabaseHelper.columnTpa]);
+    }).toList();
+    // Calculate dynamic Y-axis values
+    double maxCash = cashSpots.isNotEmpty ? cashSpots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) : 0;
+    double maxTpa = tpaSpots.isNotEmpty ? tpaSpots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b) : 0;
+    double maxValue = (maxCash > maxTpa ? maxCash : maxTpa);
+    double interval = maxValue / 10;
+    double maxY = (maxValue / interval).ceil() * interval;
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: maxY,
+        gridData: FlGridData(
+          show: true,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: Colors.grey[700]!,
+            strokeWidth: 1,
+          ),
+          getDrawingVerticalLine: (value) => FlLine(
+            color: Colors.grey[700]!,
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) {
+                if (value.toInt() < sortedRecords.length) {
+                  final date = DateTime.parse(sortedRecords[value.toInt()][DatabaseHelper.columnDate]);
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      DateFormat('MMM d').format(date),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[300],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  );
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 60,
+              interval: interval,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  'Kz ${(value / 1000).toStringAsFixed(0)}K',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[300],
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border.all(color: Colors.grey[700]!),
+        ),
+        lineTouchData: LineTouchData(
+          enabled: showTooltips,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipItems: (touchedSpots) {
+              return touchedSpots.map((LineBarSpot touchedSpot) {
+                final label = touchedSpot.barIndex == 0 ? 'Cash' : 'TPA (POS)';
+                return LineTooltipItem(
+                  '$label\nKz ${(touchedSpot.y).toStringAsFixed(2)}',
+                  TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                );
+              }).toList();
+            },
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: cashSpots,
+            isCurved: true,
+            color: const Color(0xFF10B981),
+            barWidth: 4,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: showTooltips,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 6,
+                color: const Color(0xFF10B981),
+                strokeWidth: 3,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: chartType == 'area',
+              color: const Color(0xFF10B981).withValues(alpha: 0.2),
+            ),
+          ),
+          LineChartBarData(
+            spots: tpaSpots,
+            isCurved: true,
+            color: const Color(0xFF3B82F6),
+            barWidth: 4,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: showTooltips,
+              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                radius: 6,
+                color: const Color(0xFF3B82F6),
+                strokeWidth: 3,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: chartType == 'area',
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

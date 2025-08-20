@@ -27,12 +27,14 @@ class ReceiptPrinter {
     final receiptHeader = await settingsService.getReceiptHeader();
     final receiptFooter = await settingsService.getReceiptFooter();
     final reportTitle = await settingsService.getReportTitle();
-    final currencySymbol = await settingsService.getCurrencySymbol();
-    final decimalPlaces = await settingsService.getDecimalPlaces();
+    // Currency formatting settings (for future use)
+    // final currencySymbol = await settingsService.getCurrencySymbol();
+    // final decimalPlaces = await settingsService.getDecimalPlaces();
     final paperSize = await settingsService.getPaperSize();
     final printQuality = await settingsService.getPrintQuality();
     final paperOrientation = await settingsService.getPaperOrientation();
-    final printCopies = await settingsService.getPrintCopies();
+    // Print copies setting (for future use)
+    // final printCopies = await settingsService.getPrintCopies();
     final printPreview = await settingsService.getPrintPreview();
 
     // Determine page format based on settings
@@ -102,8 +104,8 @@ class ReceiptPrinter {
       );
     } else {
       // Direct printing
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => doc.save(),
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => doc.save(),
         format: printFormat,
       );
     }

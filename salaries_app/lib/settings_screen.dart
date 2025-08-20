@@ -411,49 +411,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildSidePanelLayout() {
     final sections = _getSections();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 768;
+        
+        if (isMobile) {
+          return _buildMobileLayout(sections);
+        }
+        
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: constraints.maxWidth < 1200 ? 220 : 260,
+                child: Card(
+                  elevation: 1.5,
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    itemCount: sections.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = sections[index];
+                      final isSelected = _selectedSectionIndex == index;
+                      return ListTile(
+                        leading: Icon(item.icon, color: isSelected ? Theme.of(context).colorScheme.primary : null),
+                        title: Text(
+                          item.title, 
+                          style: TextStyle(fontSize: constraints.maxWidth < 1200 ? 13 : 14),
+                        ),
+                        selected: isSelected,
+                        visualDensity: VisualDensity.compact,
+                        onTap: () {
+                          setState(() => _selectedSectionIndex = index);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Render only the selected section on the right
+                      sections[_selectedSectionIndex].builder(),
+                      const SizedBox(height: 24),
+                      _buildActionButtons(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMobileLayout(List<_SettingsNavItem> sections) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
         children: [
-          SizedBox(
-            width: 260,
-            child: Card(
-              elevation: 1.5,
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                itemCount: sections.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final item = sections[index];
-                  final isSelected = _selectedSectionIndex == index;
-                  return ListTile(
-                    leading: Icon(item.icon, color: isSelected ? Theme.of(context).colorScheme.primary : null),
-                    title: Text(item.title),
-                    selected: isSelected,
-                    onTap: () {
-                      setState(() => _selectedSectionIndex = index);
-                    },
-                  );
-                },
+          // Mobile navigation dropdown
+          Card(
+            elevation: 1.5,
+            child: DropdownButtonFormField<int>(
+              value: _selectedSectionIndex,
+              decoration: const InputDecoration(
+                labelText: 'Settings Section',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
+              items: sections.asMap().entries.map((entry) {
+                return DropdownMenuItem<int>(
+                  value: entry.key,
+                  child: Row(
+                    children: [
+                      Icon(entry.value.icon, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(entry.value.title)),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedSectionIndex = value);
+                }
+              },
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Render only the selected section on the right
-                  sections[_selectedSectionIndex].builder(),
-                  const SizedBox(height: 24),
-                  _buildActionButtons(),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(height: 16),
+          // Selected section content
+          sections[_selectedSectionIndex].builder(),
+          const SizedBox(height: 24),
+          _buildActionButtons(),
         ],
       ),
     );

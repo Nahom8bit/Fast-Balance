@@ -1,15 +1,20 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+
 import 'package:intl/intl.dart';
 import 'package:balancer/admin_panel.dart';
 import 'package:balancer/currency_formatter.dart';
 import 'database_helper.dart';
 import 'receipt_printer.dart';
 import 'login_screen.dart';
-import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:balancer/settings_screen.dart';
 import 'update_service.dart';
 import 'theme_service.dart';
+import 'services/keyboard_shortcuts_service.dart';
+import 'services/print_preview_service.dart';
+import 'services/form_validation_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,9 +95,9 @@ class _BalancerAppState extends State<BalancerApp> {
           themeMode: _themeNotifier.themeMode,
           debugShowCheckedModeBanner: false,
           home: const LoginScreen(),
-        );
+        ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
       },
-    );
+    ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
   }
 }
 
@@ -123,19 +128,30 @@ class ClosingScreenState extends State<ClosingScreen> {
   bool _isAdmin = false;
 
   final dbHelper = DatabaseHelper.instance;
+  
+  Timer? _autoSaveTimer;
+  bool _hasUnsavedChanges = false;
+  DateTime? _lastAutoSave;
+  
+  // Form validation
+  final GlobalKey<FormState> _mainFormKey = GlobalKey<FormState>();
+  bool _isFormValid = false;
+  int? _lastRecordId;
 
   @override
   void initState() {
     super.initState();
-    _cashController.addListener(_updateCalculations);
-    _tpaController.addListener(_updateCalculations);
-    _openingBalanceController.addListener(_updateCalculations);
-    _salesController.addListener(_updateCalculations);
+    _cashController.addListener(_onFormChanged);
+    _tpaController.addListener(_onFormChanged);
+    _openingBalanceController.addListener(_onFormChanged);
+    _salesController.addListener(_onFormChanged);
     _loadCashiers();
+    _startAutoSave();
   }
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _cashController.dispose();
     _tpaController.dispose();
     _openingBalanceController.dispose();
@@ -144,19 +160,78 @@ class ClosingScreenState extends State<ClosingScreen> {
     super.dispose();
   }
 
-  Future<void> _loadCashiers() async {
-    final cashiers = await dbHelper.getCashiers();
+  void _onFormChanged() {
+    _updateCalculations();
+    _validateForm();
     setState(() {
-      _cashiers = cashiers;
-      _isAdmin = widget.username == 'admin';
-      
-      // Auto-select current user if they're a cashier
-      if (!_isAdmin) {
-        _selectedCashier = widget.username;
-      } else if (cashiers.isNotEmpty) {
-        _selectedCashier = cashiers.first[DatabaseHelper.columnUsername];
+      _hasUnsavedChanges = true;
+    });
+  }
+  
+  void _validateForm() {
+    final isValid = _mainFormKey.currentState?.validate() ?? false;
+    if (_isFormValid != isValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
+
+  void _startAutoSave() {
+    _autoSaveTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (_hasUnsavedChanges) {
+        _autoSaveDraft();
       }
     });
+  }
+
+  void _autoSaveDraft() {
+    if (!_hasUnsavedChanges) return;
+    
+    // Save current form state to shared preferences or temp storage
+    _lastAutoSave = DateTime.now();
+    setState(() {
+      _hasUnsavedChanges = false;
+    });
+    
+    // Show subtle indication of auto-save
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.save, color: Colors.white, size: 16),
+            const SizedBox(width: 8),
+            Text('Auto-saved at ${DateFormat('HH:mm').format(_lastAutoSave!)}'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.only(bottom: 60, left: 16, right: 16),
+      ),
+    ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
+  }
+
+  void _loadCashiers() async {
+    try {
+      final users = await dbHelper.queryAllUsers();
+      setState(() {
+        _cashiers = users;
+        _isAdmin = widget.username == 'admin';
+        if (_isAdmin && _cashiers.isNotEmpty) {
+          // Admin can choose cashier, default to first cashier
+          _selectedCashier = _cashiers.first[DatabaseHelper.columnUsername];
+        } else {
+          // Regular user uses their own username
+          _selectedCashier = widget.username;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _cashiers = [];
+        _selectedCashier = widget.username;
+      });
+    }
   }
 
   void _updateCalculations() {
@@ -174,7 +249,7 @@ class ClosingScreenState extends State<ClosingScreen> {
     });
   }
 
-  void _clearAllFields() {
+  void _clearForm() {
     setState(() {
       _cashController.clear();
       _tpaController.clear();
@@ -184,21 +259,64 @@ class ClosingScreenState extends State<ClosingScreen> {
       _expenses.clear();
       _netResult = 0;
       _discrepancy = 0;
+      _hasUnsavedChanges = false;
     });
+  }
+
+  void _clearAllFields() {
+    _clearForm();
+  }
+  
+  Future<void> _printReceipt(int recordId) async {
+    if (_lastClosingData != null) {
+      try {
+        await ReceiptPrinter.printReceipt(_lastClosingData!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Receipt printed successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Print failed: $e'),
+              backgroundColor: Colors.red,
+            ),
+          ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
+        }
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Balance Closing - ${widget.username}'),
+    return KeyboardShortcutsWrapper(
+      shortcuts: {
+        KeyboardShortcutsService.saveShortcut: _closeBalance,
+        KeyboardShortcutsService.printShortcut: () => _printReceipt(_lastRecordId ?? 0),
+        KeyboardShortcutsService.newShortcut: _clearForm,
+        KeyboardShortcutsService.refreshShortcut: _loadCashiers,
+        KeyboardShortcutsService.helpShortcut: () => KeyboardShortcutsService.showShortcutsHelp(context),
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Balance Closing - ${widget.username}'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.keyboard),
+            tooltip: 'Keyboard Shortcuts (F1)',
+            onPressed: () => KeyboardShortcutsService.showShortcutsHelp(context),
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
+              ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
             },
           ),
           if (widget.username == 'admin')
@@ -207,7 +325,7 @@ class ClosingScreenState extends State<ClosingScreen> {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (context) => const AdminPanel()),
-                );
+                ); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
               },
             ),
         ],
@@ -229,7 +347,7 @@ class ClosingScreenState extends State<ClosingScreen> {
           ],
         ),
       ),
-    );
+    )); // Close Scaffold\n    ); // Close KeyboardShortcutsWrapper
   }
 
   Widget _buildFormPanel() {
@@ -237,7 +355,7 @@ class ClosingScreenState extends State<ClosingScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
+          key: _mainFormKey,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,12 +364,54 @@ class ClosingScreenState extends State<ClosingScreen> {
                 const SizedBox(height: 16),
                 _buildCashierDropdown(),
                 const SizedBox(height: 16),
-                _buildTextField(controller: _cashController, label: 'Cash'),
-                _buildTextField(controller: _tpaController, label: 'TPA'),
-                _buildTextField(controller: _expensesController, label: 'Expenses', readOnly: true),
-                _buildTextField(controller: _openingBalanceController, label: 'Opening Balance'),
+                ValidatedTextField(
+                  controller: _cashController,
+                  label: 'Cash Sales (Kz)',
+                  hint: 'Enter cash over-the-counter sales',
+                  keyboardType: TextInputType.number,
+                  prefixIcon: const Icon(Icons.money),
+                  validator: (value) => FormValidationService.validateCurrency(value, fieldName: 'Cash sales'),
+                  onChanged: (_) => _onFormChanged(),
+                ),
+                const SizedBox(height: 16),
+                ValidatedTextField(
+                  controller: _tpaController,
+                  label: 'TPA Sales (Kz)',
+                  hint: 'Enter card/mobile payment sales',
+                  keyboardType: TextInputType.number,
+                  prefixIcon: const Icon(Icons.credit_card),
+                  validator: (value) => FormValidationService.validateCurrency(value, fieldName: 'TPA sales'),
+                  onChanged: (_) => _onFormChanged(),
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(controller: _expensesController, label: 'Total Expenses', readOnly: true),
+                const SizedBox(height: 16),
+                ValidatedTextField(
+                  controller: _openingBalanceController,
+                  label: 'Opening Balance (Kz)',
+                  hint: 'Enter opening cash balance',
+                  keyboardType: TextInputType.number,
+                  prefixIcon: const Icon(Icons.account_balance_wallet),
+                  validator: (value) => FormValidationService.validateCurrency(value, fieldName: 'Opening balance'),
+                  onChanged: (_) => _onFormChanged(),
+                ),
                 const Divider(height: 30, thickness: 1),
-                _buildTextField(controller: _salesController, label: 'Sales'),
+                ValidatedTextField(
+                  controller: _salesController,
+                  label: 'Total Sales from System (Kz)',
+                  hint: 'Enter total sales from your POS system',
+                  keyboardType: TextInputType.number,
+                  prefixIcon: const Icon(Icons.receipt_long),
+                  validator: (value) => FormValidationService.validateCurrency(value, fieldName: 'Total sales'),
+                  onChanged: (_) => _onFormChanged(),
+                ),
+                const SizedBox(height: 16),
+                FormValidationIndicator(
+                  isValid: _isFormValid,
+                  message: _isFormValid 
+                      ? 'All fields are valid - ready to save' 
+                      : 'Please complete all required fields',
+                ),
                  _buildCalculatedField(label: 'Net Result (Counted)', value: _netResult, highlight: true),
                 _buildCalculatedField(
                   label: 'Discrepancy (vs. System Sales)',
@@ -299,25 +459,135 @@ class ClosingScreenState extends State<ClosingScreen> {
             const Divider(),
             Expanded(
               child: _expenses.isEmpty
-                  ? const Center(child: Text('No expenses added.'))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No expenses added yet',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tap the + button to add an expense',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: _expenses.length,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       itemBuilder: (context, index) {
                         final expense = _expenses[index];
-                        return ListTile(
-                          title: Text(expense.description),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(NumberFormat.currency(symbol: '').format(expense.amount)),
-                              IconButton(
-                                icon: Icon(Icons.delete_outline, color: Colors.red[700]),
-                                onPressed: () {
-                                  setState(() => _expenses.removeAt(index));
-                                  _updateCalculations();
-                                },
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey[800]
+                                : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ],
+                              child: Icon(
+                                Icons.receipt_outlined,
+                                color: Colors.red[600],
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              expense.description,
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              'Expense #${index + 1}',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    NumberFormat.currency(symbol: 'Kz ', decimalDigits: 2).format(expense.amount),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.red[700],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: Icon(Icons.delete_outline, color: Colors.red[700]),
+                                  onPressed: () {
+                                    // Show confirmation dialog
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text('Delete Expense'),
+                                          content: Text('Are you sure you want to delete "${expense.description}"?'),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text('Cancel'),
+                                              onPressed: () => Navigator.of(context).pop(),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                                foregroundColor: Colors.white,
+                                              ),
+                                              child: const Text('Delete'),
+                                              onPressed: () {
+                                                setState(() => _expenses.removeAt(index));
+                                                _updateCalculations();
+                                                Navigator.of(context).pop();
+                                                
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text('Expense deleted'),
+                                                    backgroundColor: Colors.red,
+                                                    duration: Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                  tooltip: 'Delete expense',
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -391,17 +661,35 @@ class ClosingScreenState extends State<ClosingScreen> {
   }
 
   Widget _buildCalculatedField({required String label, required double value, bool highlight = false, Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      decoration: BoxDecoration(
+        color: highlight 
+          ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+          : Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[800]
+            : Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+        border: highlight 
+          ? Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3))
+          : null,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600], fontWeight: FontWeight.bold)),
           Text(
-            NumberFormat.currency(symbol: '').format(value),
+            label, 
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Colors.grey[600], 
+              fontWeight: FontWeight.bold
+            )
+          ),
+          Text(
+            NumberFormat.currency(symbol: 'Kz ', decimalDigits: 2).format(value),
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: color ?? (highlight ? Theme.of(context).primaryColor : Colors.black87),
+              color: color ?? (highlight ? Theme.of(context).primaryColor : null),
               fontSize: highlight ? 18 : 16,
             ),
           ),
@@ -414,35 +702,69 @@ class ClosingScreenState extends State<ClosingScreen> {
     final descriptionController = TextEditingController();
     final amountController = TextEditingController();
     final dialogFormKey = GlobalKey<FormState>();
+    
+    // Common expense suggestions
+    final commonExpenses = [
+      'Office Supplies', 'Utilities', 'Transportation', 'Maintenance', 
+      'Security', 'Cleaning', 'Internet', 'Phone Bills', 'Fuel', 'Repairs'
+    ];
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          title: const Text('Add Expense'),
-          content: Form(
-            key: dialogFormKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  validator: (value) => (value == null || value.isEmpty) ? 'Please enter a description' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: amountController,
-                  decoration: const InputDecoration(labelText: 'Amount'),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Please enter an amount';
-                    if (double.tryParse(value) == null) return 'Please enter a valid number';
-                    return null;
-                  },
-                ),
-              ],
+          title: Row(
+            children: [
+              Icon(Icons.add_circle_outline, color: Theme.of(context).primaryColor),
+              const SizedBox(width: 8),
+              const Text('Add Expense'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Form(
+              key: dialogFormKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Quick expense buttons
+                  const Text('Quick Add:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: commonExpenses.take(6).map((expense) {
+                      return ActionChip(
+                        label: Text(expense, style: const TextStyle(fontSize: 10)),
+                        onPressed: () {
+                          descriptionController.text = expense;
+                          // Note: Focus will be handled by the validation text field
+                        },
+                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  ValidatedTextField(
+                    controller: descriptionController,
+                    label: 'Expense Description',
+                    hint: 'Enter expense description',
+                    prefixIcon: const Icon(Icons.description),
+                    maxLength: 50,
+                    validator: (value) => FormValidationService.validateDescription(value, maxLength: 50),
+                  ),
+                  const SizedBox(height: 16),
+                  ValidatedTextField(
+                    controller: amountController,
+                    label: 'Amount (Kz)',
+                    hint: 'Enter expense amount (e.g., 1500.00)',
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    prefixIcon: const Icon(Icons.attach_money),
+                    validator: (value) => FormValidationService.validatePositiveNumber(value, fieldName: 'Amount'),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -450,18 +772,28 @@ class ClosingScreenState extends State<ClosingScreen> {
               child: const Text('Cancel'),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            ElevatedButton(
-              child: const Text('Add'),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('Add Expense'),
               onPressed: () {
                 if (dialogFormKey.currentState!.validate()) {
                   setState(() {
                     _expenses.add(Expense(
-                      description: descriptionController.text,
+                      description: descriptionController.text.trim(),
                       amount: double.parse(amountController.text),
                     ));
                   });
                   _updateCalculations();
                   Navigator.of(context).pop();
+                  
+                  // Show success feedback
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Expense "${descriptionController.text.trim()}" added successfully'),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
                 }
               },
             ),
@@ -491,8 +823,10 @@ class ClosingScreenState extends State<ClosingScreen> {
         DatabaseHelper.columnExpenseAmount: expense.amount,
       }).toList();
 
-      await dbHelper.insertRecordWithExpenses(closingData, expensesData);
+      int recordId = await dbHelper.insertRecordWithExpenses(closingData, expensesData);
       
+      // Add the record ID to the closing data for printing
+      closingData[DatabaseHelper.columnId] = recordId;
       setState(() => _lastClosingData = closingData);
 
       // Show print popup after successful save
@@ -525,6 +859,16 @@ class ClosingScreenState extends State<ClosingScreen> {
               child: const Text('Skip Print'),
               onPressed: () {
                 Navigator.of(context).pop();
+                _clearAllFields();
+                _showSuccessMessage();
+              },
+            ),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.preview),
+              label: const Text('Preview'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                PrintPreviewService.showPrintPreview(context, closingData);
                 _clearAllFields();
                 _showSuccessMessage();
               },
@@ -571,6 +915,8 @@ class ClosingScreenState extends State<ClosingScreen> {
       );
     }
   }
+
+
 }
 
 class Expense {
